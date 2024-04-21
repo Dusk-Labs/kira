@@ -15,6 +15,8 @@
           xorg.libXcursor 
           libxkbcommon
           fontconfig
+          # pkgs.qt5.full
+          libGL
         ];
         libPath = pkgs.lib.makeLibraryPath libs;
 

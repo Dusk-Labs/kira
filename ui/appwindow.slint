@@ -1,17 +1,123 @@
-import { Button, VerticalBox } from "std-widgets.slint";
+enum LinkType { a, b }
+struct LinkData {
+    src: int,
+    src_slot: int,
+    dst: int,
+    dst_slot: int,
+    ty: LinkType
+}
+struct Node { 
+    x: length,
+    y: length,
+    width: length,
+    text: string,
+    inputs: [LinkType],
+    outputs: [LinkType],
+}
+
+
+component Link inherits Path {
+    in property <LinkData> link;
+    in property <[Node]> nodes;
+
+    stroke-width: 3px;
+    function srcX() -> float { return (nodes[link.src].x + nodes[link.src].width) / 1px; }
+    function srcY() -> float { return nodes[link.src].y / 1px + 15 * link.src_slot ; }
+    function dstX() -> float { return nodes[link.dst].x / 1px; }
+    function dstY() -> float { return nodes[link.dst].y / 1px + 15 * link.dst_slot; }
+    MoveTo { x: srcX(); y: srcY(); }
+    CubicTo { 
+        control-1-x: srcX() + 100;
+        control-1-y: srcY(); 
+
+        control-2-x: dstX() - 100;
+        control-2-y: dstY(); 
+        x: dstX();
+        y: dstY(); 
+    }
+}
+
+component Graph inherits Rectangle {
+    background: #1f1f1f;
+    preferred-height: 300px;
+    preferred-width: 300px;
+    in-out property <[Node]> nodes;
+    in-out property <[LinkData]> links;
+    private property <[{link:LinkData, detached_src: bool}]> transient: [{
+        link: {src: 1, src_slot: 0, dst: 2, dst_slot: 0, ty: LinkType.a },
+        detached_src: false
+    }];
+
+    pure function colorFromLinkType(ty: LinkType) -> color {
+        if ty == LinkType.a {
+            orange
+        } else {
+            lightblue
+        }
+    }
+
+
+    for l in links : link:= Link {
+        link: l;
+        nodes: nodes;
+        stroke: colorFromLinkType(l.ty);
+        viewbox-width: self.width /1px;
+        viewbox-height: self.height /1px;
+    }
+
+    // for dl in detached_link : Path {
+    // }
+
+
+    for n[idx] in nodes : r:= Rectangle {
+        x: n.x;
+        y: n.y;
+        background: gray;
+        width: n.width;
+        height: l.preferred-height;
+        border-radius: 3px;
+        l := HorizontalLayout {
+            Text { text: n.text; wrap: TextWrap.word-wrap; }
+            padding: 15px;
+        }
+        TouchArea {
+            moved => {
+                if (self.pressed) {
+                    n.x += self.mouse-x - self.pressed-x;
+                    n.y += self.mouse-y - self.pressed-y;
+                    nodes[idx] = n;
+                }
+            }
+            mouse-cursor: move;
+        }
+        for input[idx] in n.inputs: Rectangle {
+            x: 0;
+            y: (15 * idx) * 1px;
+            width: 10px;
+            height: 10px;
+            background: colorFromLinkType(input);
+        }
+        for output[idx] in n.outputs: Rectangle {
+            x: n.width;
+            y: (15 * idx) * 1px;
+            width: 10px;
+            height: 10px;
+            background: colorFromLinkType(output);
+        }
+    }
+}
 
 export component AppWindow inherits Window {
-    in-out property<int> counter: 42;
-    callback request-increase-value();
-    VerticalBox {
-        Text {
-            text: "Counter: \{root.counter}";
-        }
-        Button {
-            text: "Increase value";
-            clicked => {
-                root.request-increase-value();
-            }
-        }
+    Graph {
+        nodes: [
+            { text: "Node1 Lorem ipsum dolor sit amet", x: 120px, y: 235px, width: 90px, inputs: [LinkType.a], outputs: [LinkType.b, LinkType.b]} ,
+            { text: "Node2", x: 350px, y: 150px, width: 90px, outputs: [LinkType.a] } ,
+            { text: "Node3", x: 300px, y: 350px, width: 90px, inputs: [LinkType.a, LinkType.b]} ,
+        ];
+        links: [
+            {src: 1, src_slot: 0, dst: 2, dst_slot: 0, ty: LinkType.a },
+            {src: 0, src_slot: 0, dst: 2, dst_slot: 1, ty: LinkType.b },
+            {src: 0, src_slot: 1, dst: 2, dst_slot: 1, ty: LinkType.b },
+        ];
     }
 }
