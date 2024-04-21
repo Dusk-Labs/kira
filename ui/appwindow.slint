@@ -4,8 +4,13 @@ struct LinkData {
     src_slot: int,
     dst: int,
     dst_slot: int,
-    ty: LinkType
+    ty: LinkType,
+    detached_src: bool,
+    detached_dst: bool,
+    detached_x: length,
+    detached_y: length,
 }
+
 struct Node { 
     x: length,
     y: length,
@@ -16,24 +21,80 @@ struct Node {
 }
 
 
-component Link inherits Path {
+component Link inherits Rectangle {
     in property <LinkData> link;
     in property <[Node]> nodes;
+    in property <color> link_color;
+    in property <float> viewbox-width;
+    in property <float> viewbox-height;
 
-    stroke-width: 3px;
-    function srcX() -> float { return (nodes[link.src].x + nodes[link.src].width) / 1px; }
-    function srcY() -> float { return nodes[link.src].y / 1px + 15 * link.src_slot ; }
-    function dstX() -> float { return nodes[link.dst].x / 1px; }
-    function dstY() -> float { return nodes[link.dst].y / 1px + 15 * link.dst_slot; }
-    MoveTo { x: srcX(); y: srcY(); }
-    CubicTo { 
-        control-1-x: srcX() + 100;
-        control-1-y: srcY(); 
+    function srcX() -> float {
+        if link.detached_src {
+            return 0;
+        } else {
+            return (nodes[link.src].x + nodes[link.src].width) / 1px;
+        }
+    }
+    function srcY() -> float {
+        if link.detached_src {
+            return 0;
+        } else {
+            return nodes[link.src].y / 1px + 15 * link.src_slot;
+        }
+    }
+    function dstX() -> float {
+        if link.detached_dst {
+            return 0;
+        } else {
+            return nodes[link.dst].x / 1px - 10;
+        }
+    }
+    function dstY() -> float {
+        if link.detached_dst {
+            return 0;
+        } else {
+            return nodes[link.dst].y / 1px + 15 * link.dst_slot;
+        }
+    }
 
-        control-2-x: dstX() - 100;
-        control-2-y: dstY(); 
-        x: dstX();
-        y: dstY(); 
+    Path {
+        stroke: link_color;
+        viewbox-height: viewbox-height;
+        viewbox-width: viewbox-width;
+        stroke-width: 3px;
+
+        MoveTo { x: srcX()+5; y: srcY()+5; }
+        CubicTo { 
+            control-1-x: srcX()+5 + 100;
+            control-1-y: srcY()+5; 
+
+            control-2-x: dstX()+5 - 100;
+            control-2-y: dstY()+5; 
+            x: dstX()+5;
+            y: dstY()+5; 
+        }
+    }
+    Rectangle {
+        x: srcX()*1px;
+        y: srcY()*1px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background: in_touch.has-hover ? red : link_color;
+        in_touch := TouchArea {
+            moved => {
+                
+            }
+        }
+    }
+    Rectangle {
+        x: dstX()*1px;
+        y: dstY()*1px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background: out_touch.has-hover ? red : link_color;
+        out_touch := TouchArea {}
     }
 }
 
@@ -43,12 +104,8 @@ component Graph inherits Rectangle {
     preferred-width: 300px;
     in-out property <[Node]> nodes;
     in-out property <[LinkData]> links;
-    private property <[{link:LinkData, detached_src: bool}]> transient: [{
-        link: {src: 1, src_slot: 0, dst: 2, dst_slot: 0, ty: LinkType.a },
-        detached_src: false
-    }];
 
-    pure function colorFromLinkType(ty: LinkType) -> color {
+    function colorFromLinkType(ty: LinkType) -> color {
         if ty == LinkType.a {
             orange
         } else {
@@ -56,18 +113,38 @@ component Graph inherits Rectangle {
         }
     }
 
+    for n[idx] in nodes: VerticalLayout {
+        y: n.y;
+        spacing: 5px;
+        for input in n.inputs: Rectangle {
+            x: n.x - 10px;
+            width: 10px;
+            height: 10px;
+            border-color: colorFromLinkType(input);
+            border-radius: 5px;
+            border-width: 2px;
+        }
+    }
+    for n[idx] in nodes: VerticalLayout {
+        y: n.y;
+        spacing: 5px;
+        for output[idx] in n.outputs: Rectangle {
+            x: n.x + n.width;
+            width: 10px;
+            height: 10px;
+            border-color: colorFromLinkType(output);
+            border-radius: 5px;
+            border-width: 2px;
+        }
+    }
 
-    for l in links : link:= Link {
+    for l in links : Link {
         link: l;
         nodes: nodes;
-        stroke: colorFromLinkType(l.ty);
+        link_color: colorFromLinkType(l.ty);
         viewbox-width: self.width /1px;
         viewbox-height: self.height /1px;
     }
-
-    // for dl in detached_link : Path {
-    // }
-
 
     for n[idx] in nodes : r:= Rectangle {
         x: n.x;
@@ -89,20 +166,6 @@ component Graph inherits Rectangle {
                 }
             }
             mouse-cursor: move;
-        }
-        for input[idx] in n.inputs: Rectangle {
-            x: 0;
-            y: (15 * idx) * 1px;
-            width: 10px;
-            height: 10px;
-            background: colorFromLinkType(input);
-        }
-        for output[idx] in n.outputs: Rectangle {
-            x: n.width;
-            y: (15 * idx) * 1px;
-            width: 10px;
-            height: 10px;
-            background: colorFromLinkType(output);
         }
     }
 }
