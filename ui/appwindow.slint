@@ -84,6 +84,10 @@ component Link inherits Rectangle {
         border-radius: 5px;
         background: in_touch.has-hover ? link_color.darker(1) : link_color;
         in_touch := TouchArea {
+            init => {
+                link.detached-x = srcX()*1px;
+                link.detached-y = srcY()*1px;
+            }
             moved => {
                 if (self.pressed) {
                     link.detached-src = true;
@@ -102,6 +106,10 @@ component Link inherits Rectangle {
         border-radius: 5px;
         background: out_touch.has-hover ? link_color.darker(1) : link_color;
         out_touch := TouchArea {
+            init => {
+                link.detached-x = dstX()*1px;
+                link.detached-y = dstY()*1px;
+            }
             moved => {
                 if (self.pressed) {
                     link.detached-dst = true;
