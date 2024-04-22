@@ -22,41 +22,43 @@ struct Node {
 
 
 component Link inherits Rectangle {
-    in property <LinkData> link;
+    in-out property <LinkData> link;
     in property <[Node]> nodes;
     in property <color> link_color;
     in property <float> viewbox-width;
     in property <float> viewbox-height;
 
+    callback detached(LinkData);
+
     function srcX() -> float {
         if link.detached_src {
-            return 0;
+            return link.detached-x/1px;
         } else {
             return (nodes[link.src].x + nodes[link.src].width) / 1px;
         }
     }
     function srcY() -> float {
         if link.detached_src {
-            return 0;
+            return link.detached-y/1px;
         } else {
             return nodes[link.src].y / 1px + 15 * link.src_slot;
         }
     }
     function dstX() -> float {
         if link.detached_dst {
-            return 0;
+            return link.detached-x/1px;
         } else {
             return nodes[link.dst].x / 1px - 10;
         }
     }
     function dstY() -> float {
         if link.detached_dst {
-            return 0;
+            return link.detached-y/1px;
         } else {
             return nodes[link.dst].y / 1px + 15 * link.dst_slot;
         }
     }
-
+    
     Path {
         stroke: link_color;
         viewbox-height: viewbox-height;
@@ -80,10 +82,15 @@ component Link inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: in_touch.has-hover ? red : link_color;
+        background: in_touch.has-hover ? link_color.darker(1) : link_color;
         in_touch := TouchArea {
             moved => {
-                
+                if (self.pressed) {
+                    link.detached-src = true;
+                    link.detached-x += self.mouse-x - self.pressed-x;
+                    link.detached-y += self.mouse-y - self.pressed-y;
+                    detached(link);
+                }
             }
         }
     }
@@ -93,8 +100,17 @@ component Link inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: out_touch.has-hover ? red : link_color;
-        out_touch := TouchArea {}
+        background: out_touch.has-hover ? link_color.darker(1) : link_color;
+        out_touch := TouchArea {
+            moved => {
+                if (self.pressed) {
+                    link.detached-dst = true;
+                    link.detached-x += self.mouse-x - self.pressed-x;
+                    link.detached-y += self.mouse-y - self.pressed-y;
+                    detached(link);
+                }
+            }
+        }
     }
 }
 
@@ -138,12 +154,19 @@ component Graph inherits Rectangle {
         }
     }
 
-    for l in links : Link {
+    for l[idx] in links : Link {
         link: l;
         nodes: nodes;
         link_color: colorFromLinkType(l.ty);
         viewbox-width: self.width /1px;
         viewbox-height: self.height /1px;
+
+        detached(lnk) => {
+            if lnk.detached-dst && lnk.detached-src {
+                // TODO
+            }
+            links[idx] = lnk;
+        }
     }
 
     for n[idx] in nodes : r:= Rectangle {
