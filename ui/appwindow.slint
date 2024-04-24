@@ -5,10 +5,21 @@ struct LinkData {
     dst: int,
     dst_slot: int,
     ty: LinkType,
-    detached_src: bool,
-    detached_dst: bool,
-    detached_x: length,
-    detached_y: length,
+}
+
+enum FloatingState {
+    src_attached,
+    dst_attached,
+    none,
+}
+
+struct FloatingLinkData {
+    floating_state: FloatingState,
+    node: int,
+    node_slot: int,
+    ty: LinkType,
+    x: length,
+    y: length,
 }
 
 struct Node { 
@@ -20,121 +31,155 @@ struct Node {
     outputs: [LinkType],
 }
 
-export global LinkLogic {
-    callback try_attach_src(LinkData) -> LinkData;
-    callback try_attach_dst(LinkData) -> LinkData;
+component MoveArea inherits TouchArea {
+    in-out property <FloatingLinkData> floating;
+    pointer-event(evt) => {
+        if evt.kind == PointerEventKind.down {
+            self.enabled = false;
+            MoveAreaLogic.click_event_hack(self.mouse-x, self.mouse-y, evt);
+            self.enabled = true;
+        } else if evt.kind == PointerEventKind.move {
+            MoveAreaLogic.update_floating_position(
+                self.x + self.mouse-x,
+                self.y + self.mouse-y,
+            );
+        }
+    }
 }
 
-component Link inherits Rectangle {
-    in-out property <LinkData> link;
+export global MoveAreaLogic {
+    callback click_event_hack(length, length, PointerEvent);
+    callback update_floating_position(length, length);
+    callback reset_floating_state();
+}
+
+export global LinkLogic {
+    callback new_link_from_output(int, int);
+    callback attach_link_to_output(int, int);
+    callback new_link_from_input(int, int);
+    callback attach_link_to_input(int, int);
+}
+
+
+global LinkLayout {
+    pure public function colorFromLinkType(ty: LinkType) -> color {
+        if ty == LinkType.a {
+            orange
+        } else {
+            lightblue
+        }
+    }
+
+    pure public function srcX(src: Node) -> float {
+        return (src.x + src.width) / 1px;
+    }
+    pure public function srcY(src: Node, src_slot: int) -> float {
+        return src.y / 1px + 15 * src_slot;
+    }
+    pure public function dstX(dst: Node) -> float {
+        return dst.x / 1px - 10;
+    }
+    pure public function dstY(dst: Node, dst_slot: int) -> float {
+        return dst.y / 1px + 15 * dst_slot;
+    }
+    
+}
+
+component Floating inherits Rectangle {
+    in property <FloatingLinkData> floating;
     in property <[Node]> nodes;
-    in property <color> link_color;
-    in property <float> viewbox-width;
+    in property <float> mouse-x;
+    in property <float> mouse-y;
     in property <float> viewbox-height;
-
-    callback updateLink(LinkData);
-
-    function srcX() -> float {
-        if link.detached_src {
-            return link.detached-x/1px;
-        } else {
-            return (nodes[link.src].x + nodes[link.src].width) / 1px;
-        }
+    in property <float> viewbox-width;
+    Rectangle {
+        x: floating.floating_state == FloatingState.src_attached
+            ? LinkLayout.srcX(nodes[floating.node])*1px
+            : LinkLayout.dstX(nodes[floating.node])*1px;
+        y: floating.floating_state == FloatingState.src_attached
+            ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)*1px
+            : LinkLayout.dstY(nodes[floating.node], floating.node_slot)*1px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background: LinkLayout.colorFromLinkType(floating.ty);
     }
-    function srcY() -> float {
-        if link.detached_src {
-            return link.detached-y/1px;
-        } else {
-            return nodes[link.src].y / 1px + 15 * link.src_slot;
-        }
+    Rectangle {
+        x: floating.x - 5px;
+        y: floating.y - 5px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background: LinkLayout.colorFromLinkType(floating.ty);
     }
-    function dstX() -> float {
-        if link.detached_dst {
-            return link.detached-x/1px;
-        } else {
-            return nodes[link.dst].x / 1px - 10;
-        }
-    }
-    function dstY() -> float {
-        if link.detached_dst {
-            return link.detached-y/1px;
-        } else {
-            return nodes[link.dst].y / 1px + 15 * link.dst_slot;
-        }
-    }
-
     Path {
-        stroke: link_color;
+        stroke: LinkLayout.colorFromLinkType(floating.ty);
         viewbox-height: viewbox-height;
         viewbox-width: viewbox-width;
         stroke-width: 3px;
 
-        MoveTo { x: srcX()+5; y: srcY()+5; }
+        MoveTo {
+            x: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcX(nodes[floating.node])+5
+                : LinkLayout.dstX(nodes[floating.node])+5;
+            y: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
+                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+        }
         CubicTo { 
-            control-1-x: srcX()+5 + 100;
-            control-1-y: srcY()+5; 
+            control-1-x: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcX(nodes[floating.node])+5 + 100
+                : LinkLayout.dstX(nodes[floating.node])+5 - 100;
+            control-1-y: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
+                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+            control-2-x: floating.x/1px;
+            control-2-y: floating.y/1px; 
+            x: floating.x/1px;
+            y: floating.y/1px; 
+        }
+    }
+}
 
-            control-2-x: dstX()+5 - 100;
-            control-2-y: dstY()+5; 
-            x: dstX()+5;
-            y: dstY()+5; 
+component Link inherits Rectangle {
+    in property <LinkData> link;
+    in property <[Node]> nodes;
+    in property <float> viewbox-height;
+    in property <float> viewbox-width;
+
+
+    Path {
+        stroke: LinkLayout.colorFromLinkType(link.ty);
+        viewbox-height: viewbox-height;
+        viewbox-width: viewbox-width;
+        stroke-width: 3px;
+
+        MoveTo { x: LinkLayout.srcX(nodes[link.src])+5; y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; }
+        CubicTo { 
+            control-1-x: LinkLayout.srcX(nodes[link.src])+5 + 100;
+            control-1-y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; 
+
+            control-2-x: LinkLayout.dstX(nodes[link.dst])+5 - 100;
+            control-2-y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
+            x: LinkLayout.dstX(nodes[link.dst])+5;
+            y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
         }
     }
     Rectangle {
-        x: srcX()*1px;
-        y: srcY()*1px;
+        x: LinkLayout.srcX(nodes[link.src])*1px;
+        y: LinkLayout.srcY(nodes[link.src], link.src_slot)*1px;
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: in_touch.has-hover ? link_color.darker(1) : link_color;
-        in_touch := TouchArea {
-            init => {
-                link.detached-x = srcX()*1px;
-                link.detached-y = srcY()*1px;
-            }
-            moved => {
-                if self.pressed {
-                    link.detached-src = true;
-                    link.detached-x += self.mouse-x - self.pressed-x;
-                    link.detached-y += self.mouse-y - self.pressed-y;
-                    updateLink(link);
-                }
-            }
-            pointer-event(event) => {
-                if event.kind == PointerEventKind.up {
-                    link = LinkLogic.try_attach_src(link);
-                    // updateLink(link);
-                }
-            }
-        }
+        background: LinkLayout.colorFromLinkType(link.ty);
     }
     Rectangle {
-        x: dstX()*1px;
-        y: dstY()*1px;
+        x: LinkLayout.dstX(nodes[link.dst])*1px;
+        y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)*1px;
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: out_touch.has-hover ? link_color.darker(1) : link_color;
-        out_touch := TouchArea {
-            init => {
-                link.detached-x = dstX()*1px;
-                link.detached-y = dstY()*1px;
-            }
-            moved => {
-                if (self.pressed) {
-                    link.detached-dst = true;
-                    link.detached-x += self.mouse-x - self.pressed-x;
-                    link.detached-y += self.mouse-y - self.pressed-y;
-                    updateLink(link);
-                }
-            }
-            pointer-event(event) => {
-                if event.kind == PointerEventKind.up {
-                    link = LinkLogic.try_attach_dst(link);
-                    updateLink(link);
-                }
-            }
-        }
+        background: LinkLayout.colorFromLinkType(link.ty);
     }
 }
 
@@ -143,52 +188,73 @@ component Graph inherits Rectangle {
     preferred-height: 300px;
     preferred-width: 300px;
     in-out property <[Node]> nodes;
-    in-out property <[LinkData]> links;
+    in property <[LinkData]> links;
+    in-out property <FloatingLinkData> floating;
 
-    function colorFromLinkType(ty: LinkType) -> color {
-        if ty == LinkType.a {
-            orange
-        } else {
-            lightblue
+    // catch mouse events in the background
+    if floating.floating_state != FloatingState.none: TouchArea {
+        clicked => {
+            MoveAreaLogic.reset_floating_state();
         }
     }
 
-    for n[idx] in nodes: VerticalLayout {
+    for n[node_idx] in nodes: VerticalLayout {
         y: n.y;
         spacing: 5px;
-        for input in n.inputs: Rectangle {
+        for input[input_idx] in n.inputs: Rectangle {
             x: n.x - 10px;
             width: 10px;
             height: 10px;
-            border-color: colorFromLinkType(input);
+            border-color: LinkLayout.colorFromLinkType(input);
             border-radius: 5px;
             border-width: 2px;
+            background: input_ta.has-hover ? LinkLayout.colorFromLinkType(input) : transparent;
+            input_ta := TouchArea {
+                clicked => {
+                    if floating.floating_state == FloatingState.none {
+                        LinkLogic.new_link_from_input(node_idx, input_idx);
+                    } else {
+                        LinkLogic.attach_link_to_input(node_idx, input_idx);
+                    }
+                }
+            }
         }
     }
-    for n[idx] in nodes: VerticalLayout {
+    for n[node_idx] in nodes: VerticalLayout {
         y: n.y;
         spacing: 5px;
-        for output[idx] in n.outputs: Rectangle {
+        for output[output_idx] in n.outputs: Rectangle {
             x: n.x + n.width;
             width: 10px;
             height: 10px;
-            border-color: colorFromLinkType(output);
+            border-color: LinkLayout.colorFromLinkType(output);
             border-radius: 5px;
             border-width: 2px;
-            out_touch := TouchArea {}
-
+            background: output_ta.has-hover ? LinkLayout.colorFromLinkType(output) : transparent;
+            output_ta := TouchArea {
+                clicked => {
+                    if floating.floating_state == FloatingState.none {
+                        LinkLogic.new_link_from_output(node_idx, output_idx);
+                    } else {
+                        LinkLogic.attach_link_to_output(node_idx, output_idx);
+                    }
+                }
+            }
         }
+    }
+
+    if floating.floating_state != FloatingState.none: Floating {
+        floating: floating;
+        nodes: nodes;
+        viewbox-height: self.height /1px;
+        viewbox-width: self.width /1px;
     }
 
     for l[idx] in links : Link {
         link: l;
         nodes: nodes;
-        link_color: colorFromLinkType(l.ty);
-        viewbox-width: self.width /1px;
         viewbox-height: self.height /1px;
-        updateLink(lnk) => {
-            links[idx] = lnk;
-        }
+        viewbox-width: self.width /1px;
     }
 
     for n[idx] in nodes : r:= Rectangle {
@@ -213,10 +279,18 @@ component Graph inherits Rectangle {
             mouse-cursor: move;
         }
     }
+    if floating.floating_state != FloatingState.none: MoveArea {
+        floating: floating;
+    }
 }
 
 export component AppWindow inherits Window {
     in-out property <[Node]> nodes;
-    in-out property <[LinkData]> links;
-    Graph { nodes: nodes; links: links; }
+    in property <[LinkData]> links;
+    in-out property <FloatingLinkData> floating;
+    Graph {
+        nodes: nodes;
+        links: links;
+        floating: floating;
+    }
 }
