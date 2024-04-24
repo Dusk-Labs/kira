@@ -20,6 +20,10 @@ struct Node {
     outputs: [LinkType],
 }
 
+export global LinkLogic {
+    callback try_attach_src(LinkData) -> LinkData;
+    callback try_attach_dst(LinkData) -> LinkData;
+}
 
 component Link inherits Rectangle {
     in-out property <LinkData> link;
@@ -28,7 +32,7 @@ component Link inherits Rectangle {
     in property <float> viewbox-width;
     in property <float> viewbox-height;
 
-    callback detached(LinkData);
+    callback updateLink(LinkData);
 
     function srcX() -> float {
         if link.detached_src {
@@ -58,7 +62,7 @@ component Link inherits Rectangle {
             return nodes[link.dst].y / 1px + 15 * link.dst_slot;
         }
     }
-    
+
     Path {
         stroke: link_color;
         viewbox-height: viewbox-height;
@@ -89,11 +93,17 @@ component Link inherits Rectangle {
                 link.detached-y = srcY()*1px;
             }
             moved => {
-                if (self.pressed) {
+                if self.pressed {
                     link.detached-src = true;
                     link.detached-x += self.mouse-x - self.pressed-x;
                     link.detached-y += self.mouse-y - self.pressed-y;
-                    detached(link);
+                    updateLink(link);
+                }
+            }
+            pointer-event(event) => {
+                if event.kind == PointerEventKind.up {
+                    link = LinkLogic.try_attach_src(link);
+                    // updateLink(link);
                 }
             }
         }
@@ -115,7 +125,13 @@ component Link inherits Rectangle {
                     link.detached-dst = true;
                     link.detached-x += self.mouse-x - self.pressed-x;
                     link.detached-y += self.mouse-y - self.pressed-y;
-                    detached(link);
+                    updateLink(link);
+                }
+            }
+            pointer-event(event) => {
+                if event.kind == PointerEventKind.up {
+                    link = LinkLogic.try_attach_dst(link);
+                    updateLink(link);
                 }
             }
         }
@@ -159,6 +175,8 @@ component Graph inherits Rectangle {
             border-color: colorFromLinkType(output);
             border-radius: 5px;
             border-width: 2px;
+            out_touch := TouchArea {}
+
         }
     }
 
@@ -168,11 +186,7 @@ component Graph inherits Rectangle {
         link_color: colorFromLinkType(l.ty);
         viewbox-width: self.width /1px;
         viewbox-height: self.height /1px;
-
-        detached(lnk) => {
-            if lnk.detached-dst && lnk.detached-src {
-                // TODO
-            }
+        updateLink(lnk) => {
             links[idx] = lnk;
         }
     }
@@ -202,16 +216,7 @@ component Graph inherits Rectangle {
 }
 
 export component AppWindow inherits Window {
-    Graph {
-        nodes: [
-            { text: "Node1 Lorem ipsum dolor sit amet", x: 120px, y: 235px, width: 90px, inputs: [LinkType.a], outputs: [LinkType.b, LinkType.b]} ,
-            { text: "Node2", x: 350px, y: 150px, width: 90px, outputs: [LinkType.a] } ,
-            { text: "Node3", x: 300px, y: 350px, width: 90px, inputs: [LinkType.a, LinkType.b]} ,
-        ];
-        links: [
-            {src: 1, src_slot: 0, dst: 2, dst_slot: 0, ty: LinkType.a },
-            {src: 0, src_slot: 0, dst: 2, dst_slot: 1, ty: LinkType.b },
-            {src: 0, src_slot: 1, dst: 2, dst_slot: 1, ty: LinkType.b },
-        ];
-    }
+    in-out property <[Node]> nodes;
+    in-out property <[LinkData]> links;
+    Graph { nodes: nodes; links: links; }
 }
