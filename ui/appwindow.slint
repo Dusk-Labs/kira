@@ -69,7 +69,6 @@ global LinkLayout {
             lightblue
         }
     }
-
     pure public function srcX(src: Node) -> float {
         return (src.x + src.width) / 1px;
     }
@@ -198,51 +197,6 @@ component Graph inherits Rectangle {
         }
     }
 
-    for n[node_idx] in nodes: VerticalLayout {
-        y: n.y;
-        spacing: 5px;
-        for input[input_idx] in n.inputs: Rectangle {
-            x: n.x - 10px;
-            width: 10px;
-            height: 10px;
-            border-color: LinkLayout.colorFromLinkType(input);
-            border-radius: 5px;
-            border-width: 2px;
-            background: input_ta.has-hover ? LinkLayout.colorFromLinkType(input) : transparent;
-            input_ta := TouchArea {
-                clicked => {
-                    if floating.floating_state == FloatingState.none {
-                        LinkLogic.new_link_from_input(node_idx, input_idx);
-                    } else {
-                        LinkLogic.attach_link_to_input(node_idx, input_idx);
-                    }
-                }
-            }
-        }
-    }
-    for n[node_idx] in nodes: VerticalLayout {
-        y: n.y;
-        spacing: 5px;
-        for output[output_idx] in n.outputs: Rectangle {
-            x: n.x + n.width;
-            width: 10px;
-            height: 10px;
-            border-color: LinkLayout.colorFromLinkType(output);
-            border-radius: 5px;
-            border-width: 2px;
-            background: output_ta.has-hover ? LinkLayout.colorFromLinkType(output) : transparent;
-            output_ta := TouchArea {
-                clicked => {
-                    if floating.floating_state == FloatingState.none {
-                        LinkLogic.new_link_from_output(node_idx, output_idx);
-                    } else {
-                        LinkLogic.attach_link_to_output(node_idx, output_idx);
-                    }
-                }
-            }
-        }
-    }
-
     if floating.floating_state != FloatingState.none: Floating {
         floating: floating;
         nodes: nodes;
@@ -256,6 +210,53 @@ component Graph inherits Rectangle {
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
     }
+
+    for n[node_idx] in nodes: VerticalLayout {
+        y: n.y;
+        spacing: 5px;
+        for input[input_idx] in n.inputs: Rectangle {
+            x: n.x - 10px;
+            width: 10px;
+            height: 10px;
+            border-color: input_ta.has-hover ? LinkLayout.colorFromLinkType(input).darker(1) : LinkLayout.colorFromLinkType(input);
+            border-radius: 5px;
+            border-width: 2px;
+            background: input_ta.has-hover ? LinkLayout.colorFromLinkType(input).darker(1) : transparent;
+            input_ta := TouchArea {
+                clicked => {
+                    if floating.floating_state == FloatingState.none {
+                        LinkLogic.new_link_from_input(node_idx, input_idx);
+                    } else {
+                        LinkLogic.attach_link_to_input(node_idx, input_idx);
+                    }
+                }
+            }
+        }
+    }
+
+    for n[node_idx] in nodes: VerticalLayout {
+        y: n.y;
+        spacing: 5px;
+        for output[output_idx] in n.outputs: Rectangle {
+            x: n.x + n.width;
+            width: 10px;
+            height: 10px;
+            border-color: output_ta.has-hover ? LinkLayout.colorFromLinkType(output).darker(1) : LinkLayout.colorFromLinkType(output);
+            border-radius: 5px;
+            border-width: 2px;
+            background: output_ta.has-hover ? LinkLayout.colorFromLinkType(output).darker(1) : transparent;
+            output_ta := TouchArea {
+                clicked => {
+                    if floating.floating_state == FloatingState.none {
+                        LinkLogic.new_link_from_output(node_idx, output_idx);
+                    } else {
+                        LinkLogic.attach_link_to_output(node_idx, output_idx);
+                    }
+                }
+            }
+        }
+    }
+
 
     for n[idx] in nodes : r:= Rectangle {
         x: n.x;
