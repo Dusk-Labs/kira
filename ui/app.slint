@@ -18,9 +18,16 @@ export component AppWindow inherits Window {
     preferred-height: 1000px;
     preferred-width: 1200px;
 
+    max-height: 2400px;
+    max-width: 2400px;
+
     title: "Kira Studio";
 
-    FocusScope {
+    init() => {
+        focus.focus();
+    }
+
+    focus := FocusScope {
         Graph {
             nodes: nodes;
             links: links;
