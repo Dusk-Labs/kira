@@ -1,5 +1,6 @@
 import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic } from "@ui/node_view.slint";
 import { Palette, PaletteSearch } from "@ui/command_palette.slint";
+import { Timeline } from "@ui/timeline.slint";
 
 export {
     MoveAreaLogic,
@@ -28,10 +29,19 @@ export component AppWindow inherits Window {
     }
 
     focus := FocusScope {
-        Graph {
-            nodes: nodes;
-            links: links;
-            floating: floating;
+
+        VerticalLayout {
+            Graph {
+                nodes: nodes;
+                links: links;
+                floating: floating;
+            }
+
+
+            timeline := Timeline {
+                width: 100%;
+                height: 100px;
+            }
         }
 
         palette := Palette {
