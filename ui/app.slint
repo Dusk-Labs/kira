@@ -1,0 +1,15 @@
+import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic } from "@ui/node_view.slint";
+
+export { MoveAreaLogic, LinkLogic }
+
+export component AppWindow inherits Window {
+    in-out property <[Node]> nodes;
+    in property <[LinkData]> links;
+    in-out property <FloatingLinkData> floating;
+
+    Graph {
+        nodes: nodes;
+        links: links;
+        floating: floating;
+    }
+}
