@@ -40,6 +40,10 @@ component Input inherits Rectangle {
             }
         }
     }
+
+    public function clear() {
+        input.text = "";
+    }
 }
 
 component ResultItemArrow inherits Rectangle {
@@ -240,6 +244,7 @@ export component Palette inherits Rectangle {
                     on-click(id) => {
                         PaletteSearch.add_node(id);
                         results = [];
+                        input.clear();
                         root.toggle();
                     }
                 }
