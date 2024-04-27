@@ -1,0 +1,239 @@
+import { LineEdit } from "std-widgets.slint";
+
+export struct Item {
+    id: string,
+    name: string,
+    description: string,
+    category: string,
+}
+
+export global PaletteSearch {
+    callback add_node(string);
+    callback search(string) -> [Item];
+}
+
+component Input inherits Rectangle {
+    callback edited(string);
+    callback enter();
+
+    background: #191919;
+    forward-focus: input;
+
+    VerticalLayout {
+        alignment: center;
+        padding: 20px;
+        padding-bottom: 10px;
+
+        input := TextInput {
+            height: 40px;
+            width: 90%;
+            font-size: 20px;
+            single-line: true;
+
+            edited() => {
+                root.edited(self.text);
+            }
+
+            accepted() => {
+                self.text = "";
+                enter();
+            }
+        }
+    }
+}
+
+component ResultItemArrow inherits Rectangle {
+    in property<brush> text-color;
+    in property<brush> box-color;
+    in property<brush> icon-color : #9c9c9c;
+
+    HorizontalLayout {
+        spacing: 10px;
+
+        VerticalLayout {
+            alignment: center;
+            Text {
+                color: text-color;
+                text: "Add to Workflow";
+                font-weight: 800;
+            }
+        }
+
+
+        VerticalLayout {
+            Rectangle {
+                width: 24px;
+                height: 24px;
+                background: box-color;
+                border-radius: 3px;
+                opacity: 0.98;
+
+                Image {
+                    source: @image-url("../assets/fa-arrow-right-solid.svg");
+                    width: 15px;
+                    height: 15px;
+                    colorize: icon-color;
+                    opacity: 0.98;
+                }
+            }
+        }
+    }
+}
+
+component ResultItem inherits Rectangle {
+    in property<Item> item;
+    in property<brush> item-color;
+    in property<bool> has-focus : false;
+
+    property<brush> gradient : @radial-gradient(circle, #4248d7 80%, #4249D8.darker(4%) 100%);
+
+    width: 100%;
+    height: 50px;
+
+    border-radius: 8px;
+
+    VerticalLayout {
+        alignment: center;
+
+        padding-right: 10px;
+        padding-left: 10px;
+
+        HorizontalLayout {
+            alignment: space-between;
+
+            VerticalLayout {
+                alignment: center;
+                label := Text {
+                    text: item.name + " - " + item.category;
+                }
+            }
+
+            ResultItemArrow {
+                text-color: has-focus ? #fff : #545454;
+                box-color: has-focus ? #fff : #212121;
+                icon-color: has-focus ? gradient : #9c9c9c;
+            }
+        }
+    }
+
+    area := TouchArea {
+        width: 100%;
+        height: 100%;
+    }
+
+    property<bool> has-hover <=> area.has-hover;
+
+    function get-color(hover: bool) -> brush {
+        if (self.has-focus) {
+            return gradient;
+        }
+        if (self.has-hover) {
+            return item-color.brighter(20%);
+        } else {
+            return item-color;
+        }
+    }
+
+    background: get-color(has-hover);
+}
+
+component Separator inherits HorizontalLayout {
+    in property<percent> sep-width: 100%;
+
+    alignment: center;
+    width: 100%;
+
+    Rectangle {
+        background: #222222;
+        width: root.sep-width;
+        height: root.height;
+
+        border-radius: 2px;
+    }
+}
+
+export component Palette inherits Rectangle {
+    callback closed();
+
+    property<[Item]> results : [];
+    property<int> active-result : 0;
+
+    background: #191919;
+    opacity: 0.99;
+
+    width: 500px;
+    height: 400px;
+
+    border-color: #262625;
+    border-width: 2px;
+    border-radius: 20px;
+
+    clip: true;
+
+    forward-focus: input;
+
+    public function toggle() {
+        self.visible = !self.visible;
+        self.visible ? input.focus() : closed();
+    }
+
+    public function hide() {
+        self.visible = false;
+        closed();
+    }
+
+    function wrappingAdd(idx: int) {
+        active-result = mod((active-result + idx + results.length), results.length);
+    }
+
+    FocusScope {
+        key-pressed(event) => {
+            if (event.text == Key.Tab && event.modifiers.shift) {
+                parent.wrappingAdd(-1);
+                return EventResult.accept;
+            }
+            if (event.text == Key.Tab) {
+                parent.wrappingAdd(1);
+                return EventResult.accept;
+            }
+
+            return EventResult.reject;
+        }
+
+
+        VerticalLayout {
+            padding: 10px;
+
+            input := Input {
+                height: 60px;
+
+                edited(query) => {
+                    root.results = PaletteSearch.search(query);
+                }
+
+                enter() => {
+                    if (results.length > 0) {
+                        PaletteSearch.add_node(results[active-result].id);
+                        results = [];
+                    }
+                    root.toggle();
+                }
+            }
+
+            Separator { height: 2px; sep-width: 95%; }
+
+            VerticalLayout {
+                padding: 10px;
+                padding-bottom: 0px;
+                padding-top: 20px;
+
+                for result[idx] in results : ResultItem {
+                    item-color: #191919;
+                    item: result;
+                    has-focus: idx == active-result;
+                }
+            }
+        }
+
+    }
+}

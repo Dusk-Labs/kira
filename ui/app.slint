@@ -1,15 +1,53 @@
 import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic } from "@ui/node_view.slint";
+import { Palette, PaletteSearch } from "@ui/command_palette.slint";
 
-export { MoveAreaLogic, LinkLogic }
+export {
+    MoveAreaLogic,
+    LinkLogic,
+    PaletteSearch
+}
 
 export component AppWindow inherits Window {
     in-out property <[Node]> nodes;
     in property <[LinkData]> links;
     in-out property <FloatingLinkData> floating;
 
-    Graph {
-        nodes: nodes;
-        links: links;
-        floating: floating;
+    min-width: 1000px;
+    min-height: 760px;
+
+    preferred-height: 1000px;
+    preferred-width: 1200px;
+
+    title: "Kira Studio";
+
+    FocusScope {
+        Graph {
+            nodes: nodes;
+            links: links;
+            floating: floating;
+        }
+
+        palette := Palette {
+            visible: false;
+
+            closed() => {
+                parent.focus();
+            }
+        }
+
+        // TODO: Hide palette when esc is pressed.
+        key-pressed(event) => {
+            if (event.text == Key.Escape) {
+                palette.hide();
+                return EventResult.accept;
+            }
+
+            if (event.modifiers.control && event.text == "k") {
+                palette.toggle();
+                return EventResult.accept;
+            }
+
+            return EventResult.reject;
+        }
     }
 }
