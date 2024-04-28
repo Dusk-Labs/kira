@@ -113,7 +113,7 @@ component Draggable inherits TouchArea {
   @children
 }
 
-component Timeline inherits Rectangle {
+export component Timeline inherits Rectangle {
   in-out property<float> resolution: 15.0;
 
   private property<image> default: @image-url("../assets/earth.jpg");
@@ -262,25 +262,5 @@ component Timeline inherits Rectangle {
           }
         }
       }
-  }
-}
-
-component MainWindow inherits Window {
-  min-width: 1000px;
-  min-height: 760px;
-  background: transparent;
-
-  VerticalLayout {
-
-    Rectangle {
-      width: 100%;
-      opacity: 0.8;
-      background: #333;
-    }
-
-    Timeline {
-      width: 100%;
-      height: 100px;
-    }
   }
 }
