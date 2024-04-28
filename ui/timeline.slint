@@ -1,0 +1,266 @@
+import { HorizontalBox, Slider, ScrollView, GridBox } from "std-widgets.slint";
+
+enum Position {
+  // Retain current position
+  Retain,
+  // Reset position to previous position, before being moved.
+  Reset,
+}
+
+struct BoundingRect {
+  top: int,
+  bottom: int,
+  left: int,
+  right: int,
+}
+
+struct Segment {
+  start: float,
+  duration: float,
+  title: string,
+  preview: string,
+}
+
+component VideoSegment inherits Rectangle {
+  in-out property<string> text: "";
+  in-out property<image> image;
+
+  background: #8A35E1;
+
+  HorizontalBox {
+    spacing: 20px;
+
+    Rectangle {
+      border-radius: 12px;
+      max-width: 100px;
+      clip: true;
+      drop-shadow-blur: 10px;
+      drop-shadow-color: #000;
+
+      HorizontalBox {
+        padding: 0px;
+        height: 100%;
+        width: 100%;
+
+        Image {
+          source: root.image;
+          image-fit: cover;
+          max-width: 100px;
+        }
+      }
+    }
+
+    VerticalLayout {
+      alignment: center;
+
+      Text {
+        font-family: "Roboto";
+        font-weight: 500;
+        font-size: 13px;
+        text: root.text;
+      }
+    }
+  }
+}
+
+
+component Draggable inherits TouchArea {
+  in property<int> id;
+  in property<bool> track-y: true;
+
+  private property<length> prev-x;
+  private property<length> prev-y;
+
+  /// Called when an item is being dragged
+  /// First argument is the id, second and third are the x, y absolute coordinates
+  callback dragging();
+
+  callback finished() -> Position;
+
+  mouse-cursor: move;
+  preferred-height: 0px;
+  preferred-width: 0px;
+
+  moved => { self.updateCoords(); }
+
+  pointer-event(event) => {
+    if event.kind == PointerEventKind.down {
+      self.prev-x = self.x;
+      self.prev-y = self.y;
+
+      self.updateCoords();
+    } else if (event.kind == PointerEventKind.up) {
+      self.y = self.prev-y;
+
+      if (self.finished() == Position.Reset) {
+        self.x = self.prev-x;
+      }
+    }
+  }
+
+  function updateCoords() {
+    if (self.pressed) {
+      self.x += self.mouse-x - self.pressed-x;
+
+      if (self.track-y) {
+        self.y += self.mouse-y - self.pressed-y;
+      }
+
+      self.dragging();
+    }
+  }
+
+  @children
+}
+
+export component Timeline inherits Rectangle {
+  in-out property<float> resolution: 15.0;
+
+  private property<image> default: @image-url("../assets/earth.jpg");
+
+  in-out property<[Segment]> children: [
+    { start: 0.0, duration: 4.3, title: "Earth" },
+    { start: 5.78, duration: 2.3, title: "Mars" },
+    { start: 10.1, duration: 1.2, title: "Luna" },
+    { start: 13.5, duration: 4.5, title: "Pluto" },
+  ];
+
+  function calcBoundingRect(top: length, left: length, width: length, height: length) -> BoundingRect {
+    return {
+      top: top / 1px,
+      bottom: (top + height) / 1px,
+      left: left / 1px,
+      right: (left + width) / 1px,
+    };
+  }
+
+  function boundingRect() -> BoundingRect {
+    return self.calcBoundingRect(self.absolute-position.y, self.absolute-position.x, self.width, self.height);
+  }
+
+  pure function outsideBounds(a: BoundingRect, b: BoundingRect) -> bool {
+    return b.left < a.left 
+      || b.right > a.right 
+      || b.top < a.top 
+      || b.bottom > a.bottom;
+  }
+
+  pure function pixelPerSecond() -> float {
+    return self.width / (self.resolution * 1px);
+  }
+
+  pure function pxToDuration(px: length) -> float {
+    return px / 1px / self.pixelPerSecond();
+  }
+
+  pure function durationToPx(duration: float) -> length {
+    return self.pixelPerSecond() * duration * 1px;
+  }
+
+  background: #131416;
+
+  Flickable {
+    viewport-width: 10000px;
+    interactive: false;
+    height: 100px;
+
+    function boundingRect() -> BoundingRect {
+      return root.calcBoundingRect(self.absolute-position.y, self.absolute-position.x, self.viewport-width, self.height);
+    }
+
+    for child[idx] in root.children : drag := Draggable {
+        private property<BoundingRect> bounds;
+        private property<length> margin: 10px;
+
+        id: idx;
+
+        width: root.durationToPx(child.duration);
+        height: parent.height - margin * 2;
+
+        x: root.durationToPx(child.start);
+        y: parent.y;
+
+        animate opacity {
+          duration: 100ms;
+          easing: ease-in-out;
+        }
+
+        dragging() => {
+          if (self.opacity == 1.0) {
+            self.opacity = 0.8;
+          }
+        }
+
+        finished() => {
+          self.opacity = 1.0;
+          self.bounds = root.calcBoundingRect(self.absolute-position.y, self.absolute-position.x, self.width, self.height);
+
+          if (root.outsideBounds(parent.boundingRect(), self.bounds)) {
+            return Position.Reset;
+          } else {
+            return Position.Retain;
+          }
+        }
+
+        middle := VideoSegment {
+          width: drag.width - 20px;
+          height: drag.height;
+
+          text: child.title;
+          image: root.default;
+
+          pure public function right() -> length {
+            return self.width + middle.absolute-position.x;
+          }
+
+          pure public function left() -> length {
+            return self.absolute-position.x;
+          }
+        }
+
+        drag-left := Draggable {
+          in-out property<length> radius : 12px;
+
+          height: drag.height;
+          width: 10px;
+          x: middle.x - self.width;
+          track-y: false;
+
+          dragging() => {
+            child.start += root.pxToDuration(self.absolute-position.x + self.width - middle.left());
+            child.duration -= root.pxToDuration(self.absolute-position.x + self.width - middle.left());
+            debug(child.start);
+          }
+
+          Rectangle {
+            height: parent.height;
+            width: parent.width;
+            background: #fff;
+            border-bottom-left-radius: parent.radius;
+            border-top-left-radius: parent.radius;
+          }
+        }
+
+        drag-right := Draggable {
+          in-out property<length> radius : 12px;
+
+          height: drag.height;
+          width: 10px;
+          x: middle.x + middle.width;
+          track-y: false;
+
+          dragging() => {
+            child.duration += root.pxToDuration(self.absolute-position.x - middle.right());
+          }
+
+          Rectangle {
+            height: parent.height;
+            width: parent.width;
+            background: #fff;
+            border-bottom-right-radius: parent.radius;
+            border-top-right-radius: parent.radius;
+          }
+        }
+      }
+  }
+}

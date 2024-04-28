@@ -1,11 +1,17 @@
+pub mod api;
+
 use slint::LogicalPosition;
 use slint::Model;
+use slint::ModelRc;
 use slint::VecModel;
 use std::rc::Rc;
 
 slint::include_modules!();
 
 fn main() -> Result<(), slint::PlatformError> {
+    let comfy_nodes = api::nodes();
+    let search_index = api::build_index(&comfy_nodes);
+
     let nodes = Rc::new(VecModel::from(vec![
         Node {
             text: "Node1 Lorem ipsum dolor sit amet".into(),
@@ -233,6 +239,27 @@ fn main() -> Result<(), slint::PlatformError> {
                 ..Default::default()
             });
         }
+    });
+
+    ui.global::<PaletteSearch>().on_search(move |query| {
+        let ids = search_index.search(&*query);
+        let results = ids
+            .into_iter()
+            .take(6)
+            .filter_map(|id| comfy_nodes.get_key_value(id.as_str()))
+            .map(|(id, node)| Item {
+                id: id.into(),
+                category: node.category.as_str().into(),
+                description: node.description.as_str().into(),
+                name: node.display_name.as_str().into(),
+            })
+            .collect::<Vec<_>>();
+
+        ModelRc::new(VecModel::from(results))
+    });
+
+    ui.global::<PaletteSearch>().on_add_node(move |id| {
+        println!("Adding node to view: {}", id);
     });
 
     ui.run()

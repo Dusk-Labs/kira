@@ -1,5 +1,6 @@
 enum LinkType { a, b }
-struct LinkData {
+
+export struct LinkData {
     src: int,
     src_slot: int,
     dst: int,
@@ -7,13 +8,13 @@ struct LinkData {
     ty: LinkType,
 }
 
-enum FloatingState {
+export enum FloatingState {
     src_attached,
     dst_attached,
     none,
 }
 
-struct FloatingLinkData {
+export struct FloatingLinkData {
     floating_state: FloatingState,
     node: int,
     node_slot: int,
@@ -22,7 +23,7 @@ struct FloatingLinkData {
     y: length,
 }
 
-struct Node { 
+export struct Node { 
     x: length,
     y: length,
     width: length,
@@ -182,7 +183,7 @@ component Link inherits Rectangle {
     }
 }
 
-component Graph inherits Rectangle {
+export component Graph inherits Rectangle {
     background: #1f1f1f;
     preferred-height: 300px;
     preferred-width: 300px;
@@ -265,10 +266,12 @@ component Graph inherits Rectangle {
         width: n.width;
         height: l.preferred-height;
         border-radius: 3px;
+
         l := HorizontalLayout {
             Text { text: n.text; wrap: TextWrap.word-wrap; }
             padding: 15px;
         }
+
         TouchArea {
             moved => {
                 if (self.pressed) {
@@ -281,17 +284,6 @@ component Graph inherits Rectangle {
         }
     }
     if floating.floating_state != FloatingState.none: MoveArea {
-        floating: floating;
-    }
-}
-
-export component AppWindow inherits Window {
-    in-out property <[Node]> nodes;
-    in property <[LinkData]> links;
-    in-out property <FloatingLinkData> floating;
-    Graph {
-        nodes: nodes;
-        links: links;
         floating: floating;
     }
 }
