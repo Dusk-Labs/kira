@@ -1,11 +1,9 @@
-enum LinkType { a, b }
-
 export struct LinkData {
     src: int,
     src_slot: int,
     dst: int,
     dst_slot: int,
-    ty: LinkType,
+    ty: string,
 }
 
 export enum FloatingState {
@@ -18,7 +16,7 @@ export struct FloatingLinkData {
     floating_state: FloatingState,
     node: int,
     node_slot: int,
-    ty: LinkType,
+    ty: string,
     x: length,
     y: length,
 }
@@ -28,8 +26,8 @@ export struct Node {
     y: length,
     width: length,
     text: string,
-    inputs: [LinkType],
-    outputs: [LinkType],
+    inputs: [string],
+    outputs: [string],
 }
 
 component MoveArea inherits TouchArea {
@@ -63,11 +61,13 @@ export global LinkLogic {
 
 
 global LinkLayout {
-    pure public function colorFromLinkType(ty: LinkType) -> color {
-        if ty == LinkType.a {
+    pure public function colorFromstring(ty: string) -> color {
+        if ty == "TXT" {
             orange
-        } else {
+        } else if ty == "IMG"{
             lightblue
+        } else {
+            red
         }
     }
     pure public function srcX(src: Node) -> float {
@@ -102,7 +102,7 @@ component Floating inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: LinkLayout.colorFromLinkType(floating.ty);
+        background: LinkLayout.colorFromstring(floating.ty);
     }
     Rectangle {
         x: floating.x - 5px;
@@ -110,10 +110,10 @@ component Floating inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: LinkLayout.colorFromLinkType(floating.ty);
+        background: LinkLayout.colorFromstring(floating.ty);
     }
     Path {
-        stroke: LinkLayout.colorFromLinkType(floating.ty);
+        stroke: LinkLayout.colorFromstring(floating.ty);
         viewbox-height: viewbox-height;
         viewbox-width: viewbox-width;
         stroke-width: 3px;
@@ -149,7 +149,7 @@ component Link inherits Rectangle {
 
 
     Path {
-        stroke: LinkLayout.colorFromLinkType(link.ty);
+        stroke: LinkLayout.colorFromstring(link.ty);
         viewbox-height: viewbox-height;
         viewbox-width: viewbox-width;
         stroke-width: 3px;
@@ -171,7 +171,7 @@ component Link inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: LinkLayout.colorFromLinkType(link.ty);
+        background: LinkLayout.colorFromstring(link.ty);
     }
     Rectangle {
         x: LinkLayout.dstX(nodes[link.dst])*1px;
@@ -179,7 +179,7 @@ component Link inherits Rectangle {
         width: 10px;
         height: 10px;
         border-radius: 5px;
-        background: LinkLayout.colorFromLinkType(link.ty);
+        background: LinkLayout.colorFromstring(link.ty);
     }
 }
 
@@ -192,9 +192,11 @@ export component Graph inherits Rectangle {
     in-out property <FloatingLinkData> floating;
 
     // catch mouse events in the background
-    if floating.floating_state != FloatingState.none: TouchArea {
+     TouchArea {
         clicked => {
-            MoveAreaLogic.reset_floating_state();
+            if floating.floating_state != FloatingState.none {
+                 MoveAreaLogic.reset_floating_state();
+            }
         }
     }
 
@@ -219,10 +221,10 @@ export component Graph inherits Rectangle {
             x: n.x - 10px;
             width: 10px;
             height: 10px;
-            border-color: input_ta.has-hover ? LinkLayout.colorFromLinkType(input).darker(1) : LinkLayout.colorFromLinkType(input);
+            border-color: input_ta.has-hover ? LinkLayout.colorFromstring(input).darker(1) : LinkLayout.colorFromstring(input);
             border-radius: 5px;
             border-width: 2px;
-            background: input_ta.has-hover ? LinkLayout.colorFromLinkType(input).darker(1) : transparent;
+            background: input_ta.has-hover ? LinkLayout.colorFromstring(input).darker(1) : transparent;
             input_ta := TouchArea {
                 clicked => {
                     if floating.floating_state == FloatingState.none {
@@ -242,10 +244,10 @@ export component Graph inherits Rectangle {
             x: n.x + n.width;
             width: 10px;
             height: 10px;
-            border-color: output_ta.has-hover ? LinkLayout.colorFromLinkType(output).darker(1) : LinkLayout.colorFromLinkType(output);
+            border-color: output_ta.has-hover ? LinkLayout.colorFromstring(output).darker(1) : LinkLayout.colorFromstring(output);
             border-radius: 5px;
             border-width: 2px;
-            background: output_ta.has-hover ? LinkLayout.colorFromLinkType(output).darker(1) : transparent;
+            background: output_ta.has-hover ? LinkLayout.colorFromstring(output).darker(1) : transparent;
             output_ta := TouchArea {
                 clicked => {
                     if floating.floating_state == FloatingState.none {

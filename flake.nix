@@ -17,6 +17,9 @@
           fontconfig
           # pkgs.qt5.full
           libGL
+
+          openssl
+          perl
         ];
         libPath = pkgs.lib.makeLibraryPath libs;
 
@@ -29,6 +32,8 @@
             rustfmt
             rustPackages.clippy
             rust-analyzer
+
+            pkg-config
           ] ++ libs;
           LD_LIBRARY_PATH = libPath;
         };
