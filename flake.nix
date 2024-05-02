@@ -32,6 +32,7 @@
             rustfmt
             rustPackages.clippy
             rust-analyzer
+            slint-lsp
 
             pkg-config
           ] ++ libs;

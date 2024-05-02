@@ -38,7 +38,7 @@ impl Project {
     pub fn search_available_nodes(&self, query: &str) -> Vec<(NodeType, Node)> {
         let ids = self.available_node_index.search(query);
         ids.into_iter()
-            .take(6)
+            .take(10)
             .filter_map(|id| {
                 self.available_nodes
                     .get_key_value(&id)

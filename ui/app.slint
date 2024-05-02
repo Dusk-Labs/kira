@@ -10,18 +10,12 @@ export {
 }
 
 export component View inherits Window {
-    in-out property <[Node]> nodes;
+    in property <[Node]> nodes;
     in property <[LinkData]> links;
-    in-out property <FloatingLinkData> floating;
+    in property <FloatingLinkData> floating;
 
-    min-width: 1000px;
-    min-height: 760px;
-
-    preferred-height: 1000px;
-    preferred-width: 1200px;
-
-    max-height: 2400px;
-    max-width: 2400px;
+    preferred-height: 10cm;
+    preferred-width: 20cm;
 
     title: "Kira Studio";
 
@@ -41,7 +35,7 @@ export component View inherits Window {
 
             timeline := Timeline {
                 width: 100%;
-                height: 100px;
+                height: 1cm;
             }
         }
 
@@ -49,7 +43,7 @@ export component View inherits Window {
             visible: false;
 
             closed() => {
-                parent.focus();
+                focus.focus();
             }
         }
 

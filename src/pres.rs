@@ -17,35 +17,27 @@ pub fn setup(ui: Rc<View>, model: &mut Model) {
 }
 
 fn populate_available_nodes(model: &mut Model) {
-    let dummy_nodes: HashMap<NodeType, Node> = [
-        (
-            "A".into(),
-            Node {
-                inputs: vec![],
-                outputs: vec![
-                    ("Text".into(), "TXT".into()),
-                    ("Image".into(), "IMG".into()),
-                ],
-                name: "A".into(),
-                description: "Node of type A".into(),
-                category: "Dummy".into(),
-            },
-        ),
-        (
-            "b".into(),
+    let mut dummy_nodes: HashMap<NodeType, Node> = HashMap::new();
+    for i in 0..20 {
+        let name = format!("A{}", i);
+        dummy_nodes.insert(
+            NodeType(name.clone()),
             Node {
                 inputs: vec![
                     ("Text".into(), "TXT".into()),
                     ("Image".into(), "IMG".into()),
                 ],
-                outputs: vec![],
-                name: "B".into(),
-                description: "Node of type B".into(),
+                outputs: vec![
+                    ("Text".into(), "TXT".into()),
+                    ("Image".into(), "IMG".into()),
+                ],
+                name,
+                description: "Node of type A".into(),
                 category: "Dummy".into(),
             },
-        ),
-    ]
-    .into();
+        );
+    }
+
     let available_nodes = model
         .backend()
         .query_available_nodes()

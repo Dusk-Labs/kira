@@ -32,7 +32,6 @@ component VideoSegment inherits Rectangle {
 
     Rectangle {
       border-radius: 12px;
-      max-width: 100px;
       clip: true;
       drop-shadow-blur: 10px;
       drop-shadow-color: #000;
@@ -45,7 +44,6 @@ component VideoSegment inherits Rectangle {
         Image {
           source: root.image;
           image-fit: cover;
-          max-width: 100px;
         }
       }
     }
@@ -160,9 +158,7 @@ export component Timeline inherits Rectangle {
   background: #131416;
 
   Flickable {
-    viewport-width: 10000px;
     interactive: false;
-    height: 100px;
 
     function boundingRect() -> BoundingRect {
       return root.calcBoundingRect(self.absolute-position.y, self.absolute-position.x, self.viewport-width, self.height);
@@ -175,7 +171,6 @@ export component Timeline inherits Rectangle {
         id: idx;
 
         width: root.durationToPx(child.duration);
-        height: parent.height - margin * 2;
 
         x: root.durationToPx(child.start);
         y: parent.y;
