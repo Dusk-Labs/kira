@@ -59,6 +59,10 @@ export global LinkLogic {
     callback attach_link_to_input(int, int);
 }
 
+export global NodeLogic {
+    callback move_node(int, length, length);
+}
+
 
 global LinkLayout {
     pure public function colorFromstring(ty: string) -> color {
@@ -280,6 +284,11 @@ export component Graph inherits Rectangle {
                     n.x += self.mouse-x - self.pressed-x;
                     n.y += self.mouse-y - self.pressed-y;
                     nodes[idx] = n;
+                    NodeLogic.move_node(
+                        idx,
+                        n.x + self.mouse-x - self.pressed-x,
+                        n.y + self.mouse-y - self.pressed-y,
+                    );
                 }
             }
             mouse-cursor: move;

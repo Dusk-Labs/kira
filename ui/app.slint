@@ -1,14 +1,15 @@
-import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic } from "@ui/node_view.slint";
+import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "@ui/node_view.slint";
 import { Palette, PaletteSearch } from "@ui/command_palette.slint";
 import { Timeline } from "@ui/timeline.slint";
 
 export {
+    NodeLogic,
     MoveAreaLogic,
     LinkLogic,
     PaletteSearch
 }
 
-export component AppWindow inherits Window {
+export component View inherits Window {
     in-out property <[Node]> nodes;
     in property <[LinkData]> links;
     in-out property <FloatingLinkData> floating;
