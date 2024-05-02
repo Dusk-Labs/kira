@@ -1,12 +1,9 @@
-use crate::model::Project;
-use crate::ui::Item;
-use crate::ui::PaletteSearch;
-use crate::ui::View;
-use slint::ComponentHandle;
-use slint::ModelRc;
-use slint::VecModel;
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::{
+    model::Project,
+    ui::{Item, PaletteSearch, View},
+};
+use slint::{ComponentHandle, ModelRc, VecModel};
+use std::{cell::RefCell, rc::Rc};
 
 pub fn setup(ui: Rc<View>, project: Rc<RefCell<Project>>) {
     ui.global::<PaletteSearch>().on_search({

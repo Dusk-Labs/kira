@@ -1,14 +1,11 @@
-use crate::model;
-use crate::model::Project;
-use crate::ui;
-use crate::ui::LinkData;
-use crate::ui::Node;
-use crate::ui::View;
-use slint::ComponentHandle;
-use slint::LogicalPosition;
-use slint::VecModel;
-use std::cell::RefCell;
-use std::rc::Rc;
+use crate::{
+    model,
+    model::Project,
+    ui,
+    ui::{LinkData, Node, View},
+};
+use slint::{ComponentHandle, LogicalPosition, VecModel};
+use std::{cell::RefCell, rc::Rc};
 
 pub fn setup(ui: Rc<View>, project: Rc<RefCell<Project>>) {
     {

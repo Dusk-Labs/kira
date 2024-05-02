@@ -1,9 +1,11 @@
-use crate::model::project::NodeType;
-use crate::model::project::{self, Node};
-use crate::model::Model;
-use crate::ui::View;
-use std::collections::HashMap;
-use std::rc::Rc;
+use crate::{
+    model::{
+        project::{self, Node, NodeType},
+        Model,
+    },
+    ui::View,
+};
+use std::{collections::HashMap, rc::Rc};
 
 mod command_palette;
 mod node_view;
