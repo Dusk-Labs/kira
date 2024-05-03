@@ -1,6 +1,7 @@
 use serde::Deserialize;
 use std::{collections::HashMap, error::Error};
 
+#[derive(Debug)]
 pub struct Backend {}
 impl Backend {
     pub fn new() -> Self {

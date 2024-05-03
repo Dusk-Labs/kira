@@ -1,4 +1,4 @@
-use std::{cell::RefCell, rc::Rc};
+use std::sync::{Arc, RwLock};
 
 pub use self::{backend::Backend, project::Project};
 
@@ -6,22 +6,23 @@ mod backend;
 mod file;
 pub mod project;
 
+#[derive(Debug)]
 pub struct Model {
-    project: Rc<RefCell<Project>>,
+    project: Arc<RwLock<Project>>,
     backend: Backend,
 }
 
 impl Model {
     pub fn new() -> Self {
         Self {
-            project: Rc::new(RefCell::new(Project::new())),
+            project: Arc::new(RwLock::new(Project::new())),
             backend: Backend::new(),
         }
     }
     pub fn backend(&self) -> &Backend {
         &self.backend
     }
-    pub fn project(&self) -> Rc<RefCell<Project>> {
+    pub fn project(&self) -> Arc<RwLock<Project>> {
         self.project.clone()
     }
 }

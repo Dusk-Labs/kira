@@ -3,14 +3,17 @@ use crate::{
     ui::{Item, PaletteSearch, View},
 };
 use slint::{ComponentHandle, ModelRc, VecModel};
-use std::{cell::RefCell, rc::Rc};
+use std::sync::{mpsc::Sender, Arc, RwLock};
 
-pub fn setup(ui: Rc<View>, project: Rc<RefCell<Project>>) {
+use super::Event;
+
+pub fn setup(project: Arc<RwLock<Project>>, ui: &View, tx: Sender<Event>) {
     ui.global::<PaletteSearch>().on_search({
         let project = project.clone();
         move |query| {
-            let project = (*project).borrow();
             let results = project
+                .read()
+                .unwrap()
                 .search_available_nodes(&query)
                 .into_iter()
                 .map(|(id, node)| Item {
@@ -28,9 +31,13 @@ pub fn setup(ui: Rc<View>, project: Rc<RefCell<Project>>) {
     ui.global::<PaletteSearch>().on_add_node({
         let project = project.clone();
         move |id| {
-            let mut project = (*project).borrow_mut();
-            if project.get_available_node(&id.clone().into()).is_some() {
-                project.add_node(id.clone().into());
+            if project
+                .read()
+                .unwrap()
+                .get_available_node(&id.clone().into())
+                .is_some()
+            {
+                tx.send(Event::AddNode(id.clone().into())).unwrap();
             }
         }
     });

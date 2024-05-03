@@ -1,17 +1,24 @@
+mod ctrl;
 mod model;
-mod pres;
 mod ui {
     slint::include_modules!();
 }
 
+use ctrl::Controller;
 use model::Model;
 use slint::ComponentHandle;
-use std::rc::Rc;
 use ui::View;
 
 fn main() -> Result<(), slint::PlatformError> {
-    let mut model = Model::new();
-    let ui = Rc::new(View::new()?);
-    pres::setup(ui.clone(), &mut model);
+    let model = Model::new();
+    let ui = View::new()?;
+    let ctrl = Controller::new(&ui, model);
+
+    std::thread::spawn({
+        let ui = ui.as_weak();
+        move || {
+            ctrl.run(ui);
+        }
+    });
     ui.run()
 }

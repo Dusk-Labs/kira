@@ -284,13 +284,18 @@ export component Graph inherits Rectangle {
                     n.x += self.mouse-x - self.pressed-x;
                     n.y += self.mouse-y - self.pressed-y;
                     nodes[idx] = n;
+                }
+            }
+            pointer-event(event) => {
+                if event.kind == PointerEventKind.up {
                     NodeLogic.move_node(
                         idx,
                         n.x + self.mouse-x - self.pressed-x,
                         n.y + self.mouse-y - self.pressed-y,
                     );
-                }
+                } 
             }
+
             mouse-cursor: move;
         }
     }

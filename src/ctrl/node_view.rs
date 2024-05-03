@@ -1,42 +1,52 @@
 use crate::{
-    model,
-    model::Project,
+    ctrl::Event,
+    model::{self, Project},
     ui,
     ui::{LinkData, Node, View},
 };
-use slint::{ComponentHandle, LogicalPosition, VecModel};
-use std::{cell::RefCell, rc::Rc};
+use slint::{ComponentHandle, LogicalPosition, VecModel, Weak};
+use std::sync::{mpsc::Sender, Arc, RwLock};
 
-pub fn setup(ui: Rc<View>, project: Rc<RefCell<Project>>) {
-    {
-        let mut project = (*project).borrow_mut();
-
-        refresh(ui.clone(), &project);
-
-        project.subscribe(Box::new({
-            let ui = ui.clone();
-            move |prj: &Project| refresh(ui.clone(), prj)
-        }));
-    }
-
+pub fn setup(project: Arc<RwLock<Project>>, ui: &View, tx: Sender<Event>) {
     ui.set_floating(ui::FloatingLinkData {
         floating_state: ui::FloatingState::None,
         ..Default::default()
     });
 
-    setup_node_logic(ui.clone(), project.clone());
-    setup_link_logic(ui.clone(), project);
+    setup_node_logic(ui, tx.clone());
+    setup_link_logic(ui, project.clone(), tx);
     setup_move_area_logic(ui);
-}
-
-fn refresh(ui: Rc<View>, project: &Project) {
-    refresh_ui_links(ui.clone(), project);
+    refresh_ui_links(ui, project.clone());
     refresh_ui_nodes(ui, project);
 }
 
-fn refresh_ui_links(ui: Rc<View>, project: &Project) {
+pub fn notify(ui: Weak<View>, project: Arc<RwLock<Project>>, evt: Event) {
+    ui.upgrade_in_event_loop(move |ui| {
+        use Event::*;
+        match evt {
+            SetNodePosition(..) => {
+                refresh_ui_nodes(&ui, project.clone());
+                refresh_ui_links(&ui, project);
+            }
+            RemoveLink(..) => {
+                refresh_ui_links(&ui, project);
+            }
+            AddLink(..) => {
+                refresh_ui_links(&ui, project);
+            }
+            AddNode(..) => {
+                refresh_ui_nodes(&ui, project);
+            }
+        }
+    })
+    .unwrap()
+}
+
+fn refresh_ui_links(ui: &View, project: Arc<RwLock<Project>>) {
     ui.set_links(VecModel::from_slice(
         &project
+            .read()
+            .unwrap()
             .get_links()
             .iter()
             .map(|l| LinkData {
@@ -47,16 +57,18 @@ fn refresh_ui_links(ui: Rc<View>, project: &Project) {
                 ty: l.ty.0.clone().into(),
             })
             .collect::<Vec<_>>(),
-    ));
+    ))
 }
 
-fn refresh_ui_nodes(ui: Rc<View>, project: &Project) {
+fn refresh_ui_nodes(ui: &View, project: Arc<RwLock<Project>>) {
     ui.set_nodes(VecModel::from_slice(
         &project
+            .read()
+            .unwrap()
             .get_nodes()
             .iter()
             .map(|ni| {
-                let n = project.get_available_node(&ni.ty).unwrap();
+                let n = project.read().unwrap().get_available_node(&ni.ty).unwrap();
                 Node {
                     inputs: VecModel::from_slice(
                         &n.inputs
@@ -77,15 +89,16 @@ fn refresh_ui_nodes(ui: Rc<View>, project: &Project) {
                 }
             })
             .collect::<Vec<_>>(),
-    ));
+    ))
 }
-
-fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
+fn setup_link_logic(ui: &View, project: Arc<RwLock<Project>>, tx: Sender<Event>) {
     ui.global::<ui::LinkLogic>().on_new_link_from_output({
-        let ui = ui.clone();
+        let ui = ui.as_weak();
+        let tx = tx.clone();
         let project = project.clone();
         move |node_idx, slot_idx| {
-            let mut project = (*project).borrow_mut();
+            let ui = ui.upgrade().unwrap();
+            let project = project.read().unwrap();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -93,7 +106,6 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
             {
                 for (i, link) in project.get_links().iter().enumerate() {
                     if link.src_node == node_idx as usize && link.src_slot == slot_idx as usize {
-                        // let link = links.remove(i);
                         ui.set_floating(ui::FloatingLinkData {
                             floating_state: ui::FloatingState::DstAttached,
                             node: link.dst_node as i32,
@@ -102,7 +114,7 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
                             x: 0.,
                             y: 0.,
                         });
-                        project.remove_link(i);
+                        tx.send(Event::RemoveLink(i)).unwrap();
                         return;
                     }
                 }
@@ -119,10 +131,12 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
         }
     });
     ui.global::<ui::LinkLogic>().on_new_link_from_input({
-        let ui = ui.clone();
+        let ui = ui.as_weak();
+        let tx = tx.clone();
         let project = project.clone();
         move |node_idx, slot_idx| {
-            let mut project = (*project).borrow_mut();
+            let ui = ui.upgrade().unwrap();
+            let project = project.read().unwrap();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -139,7 +153,7 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
                             x: 0.,
                             y: 0.,
                         });
-                        project.remove_link(i);
+                        tx.send(Event::RemoveLink(i)).unwrap();
                         return;
                     }
                 }
@@ -156,10 +170,12 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
         }
     });
     ui.global::<ui::LinkLogic>().on_attach_link_to_input({
-        let ui = ui.clone();
+        let ui = ui.as_weak();
+        let tx = tx.clone();
         let project = project.clone();
         move |node_idx, slot_idx| {
-            let mut project = (*project).borrow_mut();
+            let ui = ui.upgrade().unwrap();
+            let project = project.read().unwrap();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -169,13 +185,14 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
                 if floating.ty.as_str() == slot_ty.0
                     && floating.floating_state == ui::FloatingState::SrcAttached
                 {
-                    project.add_link(model::project::Link {
+                    tx.send(Event::AddLink(model::project::Link {
                         dst_node: node_idx as usize,
                         dst_slot: slot_idx as usize,
                         src_node: floating.node as usize,
                         src_slot: floating.node_slot as usize,
                         ty: slot_ty.clone(),
-                    });
+                    }))
+                    .unwrap();
                 }
             }
             ui.set_floating(ui::FloatingLinkData {
@@ -185,10 +202,11 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
         }
     });
     ui.global::<ui::LinkLogic>().on_attach_link_to_output({
-        let ui = ui.clone();
+        let ui = ui.as_weak();
         let project = project.clone();
         move |node_idx, slot_idx| {
-            let mut project = (*project).borrow_mut();
+            let ui = ui.upgrade().unwrap();
+            let project = project.read().unwrap();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -198,13 +216,14 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
                 if floating.ty.as_str() == slot_ty.0
                     && floating.floating_state == ui::FloatingState::DstAttached
                 {
-                    project.add_link(model::project::Link {
+                    tx.send(Event::AddLink(model::project::Link {
                         src_node: node_idx as usize,
                         src_slot: slot_idx as usize,
                         dst_node: floating.node as usize,
                         dst_slot: floating.node_slot as usize,
                         ty: slot_ty.clone(),
-                    });
+                    }))
+                    .unwrap();
                 }
             }
             ui.set_floating(ui::FloatingLinkData {
@@ -215,7 +234,7 @@ fn setup_link_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
     });
 }
 
-fn setup_move_area_logic(ui: Rc<View>) {
+fn setup_move_area_logic(ui: &View) {
     ui.global::<ui::MoveAreaLogic>().on_click_event_hack({
         let ui = ui.as_weak();
         move |x, y, evt| {
@@ -256,12 +275,11 @@ fn setup_move_area_logic(ui: Rc<View>) {
     });
 }
 
-fn setup_node_logic(ui: Rc<View>, project: Rc<RefCell<Project>>) {
+fn setup_node_logic(ui: &View, tx: Sender<Event>) {
     ui.global::<ui::NodeLogic>().on_move_node({
-        let project = project.clone();
         move |node_idx, x, y| {
-            let mut project = (*project).borrow_mut();
-            project.set_node_position(node_idx as usize, x, y);
+            tx.send(Event::SetNodePosition(node_idx as usize, x, y))
+                .unwrap();
         }
     });
 }

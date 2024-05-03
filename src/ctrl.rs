@@ -1,19 +1,68 @@
 use crate::{
     model::{
+        self,
         project::{self, Node, NodeType},
         Model,
     },
     ui::View,
 };
-use std::{collections::HashMap, rc::Rc};
+use slint::Weak;
+use std::{collections::HashMap, sync::mpsc::Receiver};
 
 mod command_palette;
 mod node_view;
 
-pub fn setup(ui: Rc<View>, model: &mut Model) {
-    populate_available_nodes(model);
-    node_view::setup(ui.clone(), model.project());
-    command_palette::setup(ui, model.project());
+pub enum Event {
+    SetNodePosition(usize, f32, f32),
+    AddLink(model::project::Link),
+    RemoveLink(usize),
+    AddNode(model::project::NodeType),
+}
+
+pub struct Controller {
+    rx: Receiver<Event>,
+    model: Model,
+}
+
+impl Controller {
+    pub fn new(ui: &View, mut model: Model) -> Self {
+        let (tx, rx) = std::sync::mpsc::channel();
+        populate_available_nodes(&mut model);
+        node_view::setup(model.project(), ui, tx.clone());
+        command_palette::setup(model.project(), ui, tx);
+        Self { rx, model }
+    }
+
+    pub fn run(self, ui: Weak<View>) {
+        for evt in self.rx.iter() {
+            use Event::*;
+            match evt {
+                SetNodePosition(node_idx, x, y) => {
+                    self.model.project().write().unwrap().set_node_position(
+                        node_idx as usize,
+                        x,
+                        y,
+                    );
+                    node_view::notify(ui.clone(), self.model.project(), evt);
+                }
+
+                AddLink(ref lnk) => {
+                    self.model.project().write().unwrap().add_link(lnk.clone());
+                    node_view::notify(ui.clone(), self.model.project(), evt);
+                }
+
+                RemoveLink(i) => {
+                    self.model.project().write().unwrap().remove_link(i);
+                    node_view::notify(ui.clone(), self.model.project(), evt);
+                }
+
+                AddNode(ref ty) => {
+                    self.model.project().write().unwrap().add_node(ty.clone());
+                    node_view::notify(ui.clone(), self.model.project(), evt);
+                }
+            }
+        }
+    }
 }
 
 fn populate_available_nodes(model: &mut Model) {
@@ -69,6 +118,7 @@ fn populate_available_nodes(model: &mut Model) {
         .unwrap_or(dummy_nodes);
     model
         .project()
-        .borrow_mut()
+        .write()
+        .unwrap()
         .set_available_nodes(available_nodes);
 }

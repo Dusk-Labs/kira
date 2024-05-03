@@ -2,15 +2,13 @@ use simsearch::{SearchOptions, SimSearch};
 use slint::SharedString;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct Project {
     available_node_index: SimSearch<NodeType>,
     available_nodes: HashMap<NodeType, Node>,
     nodes: Vec<NodeInstance>,
     links: Vec<Link>,
-    subscribers: Vec<Subscriber>,
 }
-
-type Subscriber = Box<dyn Fn(&Project)>;
 
 impl Project {
     pub fn new() -> Self {
@@ -19,21 +17,11 @@ impl Project {
             available_node_index: Self::empty_index(),
             nodes: vec![],
             links: vec![],
-            subscribers: vec![],
-        }
-    }
-    pub fn subscribe(&mut self, f: Subscriber) {
-        self.subscribers.push(f);
-    }
-    fn notify(&self) {
-        for s in self.subscribers.iter() {
-            s(self);
         }
     }
     pub fn set_available_nodes(&mut self, nodes: HashMap<NodeType, Node>) {
         self.available_nodes = nodes;
         self.build_index();
-        self.notify();
     }
     pub fn search_available_nodes(&self, query: &str) -> Vec<(NodeType, Node)> {
         let ids = self.available_node_index.search(query);
@@ -51,7 +39,6 @@ impl Project {
             ty: id,
             pos: (0., 0.),
         });
-        self.notify();
     }
     pub fn set_node_position(&mut self, node_idx: usize, x: f32, y: f32) {
         let node_ref = self.nodes.get_mut(node_idx).unwrap();
@@ -60,11 +47,9 @@ impl Project {
     }
     pub fn remove_link(&mut self, idx: usize) {
         self.links.remove(idx);
-        self.notify();
     }
     pub fn add_link(&mut self, lnk: Link) {
         self.links.push(lnk);
-        self.notify();
     }
     pub fn get_available_node(&self, id: &NodeType) -> Option<Node> {
         self.available_nodes.get(id).cloned()
@@ -106,11 +91,13 @@ impl Node {
     }
 }
 
+#[derive(Debug)]
 pub struct NodeInstance {
     pub ty: NodeType,
     pub pos: (f32, f32),
 }
 
+#[derive(Debug, Clone)]
 pub struct Link {
     pub src_node: usize,
     pub src_slot: usize,
