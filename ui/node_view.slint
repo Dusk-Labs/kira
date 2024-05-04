@@ -35,7 +35,11 @@ component MoveArea inherits TouchArea {
     pointer-event(evt) => {
         if evt.kind == PointerEventKind.down {
             self.enabled = false;
-            MoveAreaLogic.click_event_hack(self.mouse-x, self.mouse-y, evt);
+            MoveAreaLogic.click_event_hack(
+                self.absolute-position.x + self.x + self.mouse-x,
+                self.absolute-position.y + self.y + self.mouse-y,
+                evt
+            );
             self.enabled = true;
         } else if evt.kind == PointerEventKind.move {
             MoveAreaLogic.update_floating_position(
