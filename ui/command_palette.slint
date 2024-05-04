@@ -157,7 +157,6 @@ export component Palette inherits Rectangle {
     Rectangle {
         width: parent.width - 3cm;
         height: parent.height - 3cm;
-
         border-color: #262625;
         border-width: 2px;
         border-radius: 20px;
@@ -202,21 +201,17 @@ export component Palette inherits Rectangle {
                     background: white;
                     border-radius: 2px;
                 }
-                VerticalLayout {
-                    padding: 10px;
-                    spacing: 5px;
+         
+                for result[idx] in results : ResultItem {
+                    item-color: #191919;
+                    item: result;
+                    has-focus: idx == active-result;
 
-                    for result[idx] in results : ResultItem {
-                        item-color: #191919;
-                        item: result;
-                        has-focus: idx == active-result;
-
-                        on-click(id) => {
-                            PaletteSearch.add_node(id);
-                            results = [];
-                            input.clear();
-                            root.toggle();
-                        }
+                    on-click(id) => {
+                        PaletteSearch.add_node(id);
+                        results = [];
+                        input.clear();
+                        root.toggle();
                     }
                 }
             }
