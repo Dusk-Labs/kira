@@ -1,15 +1,28 @@
-use super::Event;
+use super::{Aro, Controller, Event};
 use crate::{
     model::Model,
     ui::{PaletteSearch, SearchItem, View},
 };
 use slint::{ComponentHandle, ModelRc, VecModel};
-use std::sync::{mpsc::Sender, Arc, RwLock};
+use std::sync::mpsc::Sender;
 
-pub fn setup(model: Arc<RwLock<Model>>, ui: &View, tx: Sender<Event>) {
-    let model = model.read().unwrap();
-    setup_command_palette_logic(ui, tx);
-    refresh(&model, ui);
+pub struct CommandPalette;
+
+impl Controller for CommandPalette {
+    fn setup(model: Aro<Model>, ui: &View, tx: Sender<Event>) {
+        let model = model.read();
+        setup_command_palette_logic(ui, tx);
+        refresh(&model, ui);
+    }
+    fn notify(ui: &View, model: &Model, evt: &Event) {
+        use Event::*;
+        match evt {
+            AddNode(..) | SetNodePosition(..) | RemoveLink(..) | AddLink(..) => {}
+            SelectTab(..) | NewTab | SetCommandSearch(..) => {
+                refresh(model, ui);
+            }
+        }
+    }
 }
 
 fn setup_command_palette_logic(ui: &View, tx: Sender<Event>) {
@@ -50,15 +63,5 @@ fn refresh(model: &Model, ui: &View) {
             })
             .collect::<Vec<_>>();
         ui.set_command_palette_results(ModelRc::new(VecModel::from_slice(&res)))
-    }
-}
-
-pub fn notify(ui: &View, model: &Model, evt: &Event) {
-    use Event::*;
-    match evt {
-        AddNode(..) | SetNodePosition(..) | RemoveLink(..) | AddLink(..) => {}
-        SelectTab(..) | NewTab | SetCommandSearch(..) => {
-            refresh(model, ui);
-        }
     }
 }

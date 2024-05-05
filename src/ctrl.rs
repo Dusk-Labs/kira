@@ -5,12 +5,15 @@ use crate::{
         Model,
     },
     ui::View,
+    utils::{Aro, Arw},
 };
 use slint::Weak;
 use std::{
     collections::HashMap,
-    sync::{mpsc::Receiver, Arc, RwLock},
+    sync::mpsc::{Receiver, Sender},
 };
+
+use self::{command_palette::CommandPalette, node_view::NodeView, tabs::Tabs};
 
 mod command_palette;
 mod node_view;
@@ -27,9 +30,14 @@ pub enum Event {
     SetCommandSearch(String),
 }
 
+trait Controller {
+    fn setup(model: Aro<Model>, ui: &View, tx: Sender<Event>);
+    fn notify(ui: &View, model: &Model, evt: &Event);
+}
+
 pub struct Mediator {
     rx: Receiver<Event>,
-    model: Arc<RwLock<Model>>,
+    model: Arw<Model>,
 }
 
 impl Mediator {
@@ -38,114 +46,76 @@ impl Mediator {
 
         populate_available_nodes(&mut model);
 
-        let model = Arc::new(RwLock::new(model));
+        let model = Arw::new(model);
+        let ro_model = Aro::from(model.clone());
 
-        tabs::setup(model.clone(), ui, tx.clone());
-        node_view::setup(model.clone(), ui, tx.clone());
-        command_palette::setup(model.clone(), ui, tx.clone());
+        Tabs::setup(ro_model.clone(), ui, tx.clone());
+        NodeView::setup(ro_model.clone(), ui, tx.clone());
+        CommandPalette::setup(ro_model.clone(), ui, tx.clone());
 
         Self { rx, model }
     }
 
     pub fn run(self, ui: Weak<View>) {
         for evt in self.rx.iter() {
-            dbg!(&evt);
-            use Event::*;
-            match evt {
-                SetCommandSearch(ref query) => {
-                    let mut model = self.model.write().unwrap();
-                    model.set_command_search(query.clone());
-
+            macro_rules! notify {
+                ($($ctrl:ty),*) => {
                     ui.upgrade_in_event_loop({
                         let model = self.model.clone();
                         move |ui| {
-                            let model = model.read().unwrap();
-                            command_palette::notify(&ui, &model, &evt);
+                            let model = model.read();
+                            $(<$ctrl>::notify(&ui, &model, &evt);)*
                         }
                     })
                     .unwrap()
+                };
+            }
+            use Event::*;
+
+            dbg!(&evt);
+            match evt {
+                SetCommandSearch(ref query) => {
+                    let mut model = self.model.write();
+                    model.set_command_search(query.clone());
+
+                    notify!(CommandPalette);
                 }
                 SetNodePosition(node_idx, x, y) => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model
                         .tabs_mut()
                         .selected_project_mut()
                         .set_node_position(node_idx, x, y);
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    notify!(NodeView);
                 }
                 AddNode(ref ty) => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model.tabs_mut().selected_project_mut().add_node(ty.clone());
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    notify!(NodeView);
                 }
                 AddLink(ref lnk) => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model
                         .tabs_mut()
                         .selected_project_mut()
                         .add_link(lnk.clone());
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    notify!(NodeView);
                 }
                 RemoveLink(i) => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model.tabs_mut().selected_project_mut().remove_link(i);
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    notify!(NodeView);
                 }
                 SelectTab(i) => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model.tabs_mut().select_tab(i);
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                            tabs::notify(&ui, &model, &evt);
-                            command_palette::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    notify!(NodeView, Tabs, CommandPalette);
                 }
                 NewTab => {
-                    let mut model = self.model.write().unwrap();
+                    let mut model = self.model.write();
                     model.tabs_mut().new_tab();
-                    ui.upgrade_in_event_loop({
-                        let model = self.model.clone();
-                        move |ui| {
-                            let model = model.read().unwrap();
-                            node_view::notify(&ui, &model, &evt);
-                            tabs::notify(&ui, &model, &evt);
-                            command_palette::notify(&ui, &model, &evt);
-                        }
-                    })
-                    .unwrap()
+                    populate_available_nodes(&mut model);
+                    notify!(NodeView, Tabs, CommandPalette);
                 }
             }
         }

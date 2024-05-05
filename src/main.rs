@@ -1,5 +1,6 @@
 mod ctrl;
 mod model;
+mod utils;
 mod ui {
     slint::include_modules!();
 }

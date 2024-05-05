@@ -1,36 +1,39 @@
-use super::Event;
+use super::{Aro, Controller, Event};
 use crate::{
     model::Model,
     ui::{TabLogic, View},
 };
 use slint::{ComponentHandle, SharedString, VecModel};
-use std::sync::{mpsc::Sender, Arc, RwLock};
+use std::sync::mpsc::Sender;
 
-pub fn setup(model: Arc<RwLock<Model>>, ui: &View, tx: Sender<Event>) {
-    let model = model.read().unwrap();
-    refresh(&model, ui);
+pub struct Tabs;
 
-    ui.global::<TabLogic>().on_select_tab({
-        let tx = tx.clone();
-        move |selected| {
-            tx.send(Event::SelectTab(selected as usize)).unwrap();
-        }
-    });
-    ui.global::<TabLogic>().on_new_tab({
-        let tx = tx.clone();
-        move || {
-            tx.send(Event::NewTab).unwrap();
-        }
-    });
-}
+impl Controller for Tabs {
+    fn setup(model: Aro<Model>, ui: &View, tx: Sender<Event>) {
+        let model = model.read();
+        refresh(&model, ui);
 
-pub fn notify(ui: &View, model: &Model, evt: &Event) {
-    use Event::*;
-    match evt {
-        SelectTab(..) | NewTab => {
-            refresh(model, ui);
-        }
-        SetCommandSearch(..) | SetNodePosition(..) | AddNode(..) | RemoveLink(..) | AddLink(..) => {
+        ui.global::<TabLogic>().on_select_tab({
+            let tx = tx.clone();
+            move |selected| {
+                tx.send(Event::SelectTab(selected as usize)).unwrap();
+            }
+        });
+        ui.global::<TabLogic>().on_new_tab({
+            let tx = tx.clone();
+            move || {
+                tx.send(Event::NewTab).unwrap();
+            }
+        });
+    }
+    fn notify(ui: &View, model: &Model, evt: &Event) {
+        use Event::*;
+        match evt {
+            SelectTab(..) | NewTab => {
+                refresh(model, ui);
+            }
+            SetCommandSearch(..) | SetNodePosition(..) | AddNode(..) | RemoveLink(..)
+            | AddLink(..) => {}
         }
     }
 }
