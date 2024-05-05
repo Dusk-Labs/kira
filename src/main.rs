@@ -4,7 +4,7 @@ mod ui {
     slint::include_modules!();
 }
 
-use ctrl::Controller;
+use ctrl::Mediator;
 use model::Model;
 use slint::ComponentHandle;
 use ui::View;
@@ -12,7 +12,7 @@ use ui::View;
 fn main() -> Result<(), slint::PlatformError> {
     let model = Model::new();
     let ui = View::new()?;
-    let ctrl = Controller::new(&ui, model);
+    let ctrl = Mediator::new(&ui, model);
 
     std::thread::spawn({
         let ui = ui.as_weak();

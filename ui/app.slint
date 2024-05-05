@@ -1,21 +1,26 @@
 import { Graph, Node, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "@ui/node_view.slint";
-import { Palette, PaletteSearch } from "@ui/command_palette.slint";
+import { SearchItem, Palette, PaletteSearch } from "@ui/command_palette.slint";
 import { Timeline } from "@ui/timeline.slint";
+import { Tabs, TabLogic } from "@ui/tabs.slint";
 
 export {
     NodeLogic,
     MoveAreaLogic,
     LinkLogic,
-    PaletteSearch
+    PaletteSearch,
+    TabLogic
 }
 
 export component View inherits Window {
     in property <[Node]> nodes;
     in property <[LinkData]> links;
     in property <FloatingLinkData> floating;
+    in property <int> selected_tab;
+    in property <[string]> tab_names;
+    in property <[SearchItem]> command_palette_results;
 
-    preferred-height: 10cm;
-    preferred-width: 20cm;
+    preferred-height: 20cm;
+    preferred-width: 30cm;
 
     title: "Kira Studio";
 
@@ -26,6 +31,11 @@ export component View inherits Window {
     focus := FocusScope {
 
         VerticalLayout {
+            Tabs {
+                selected_tab: selected_tab;
+                tab_names: tab_names;
+            }
+
             Graph {
                 nodes: nodes;
                 links: links;
@@ -38,16 +48,14 @@ export component View inherits Window {
                 height: 1cm;
             }
         }
-
         palette := Palette {
             visible: false;
+            results: command_palette_results;
 
             closed() => {
                 focus.focus();
             }
         }
-
-        // TODO: Hide palette when esc is pressed.
         key-pressed(event) => {
             if (event.text == Key.Escape) {
                 palette.hide();

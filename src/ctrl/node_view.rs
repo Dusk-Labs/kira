@@ -1,52 +1,48 @@
 use crate::{
     ctrl::Event,
-    model::{self, Project},
-    ui,
-    ui::{LinkData, Node, View},
+    model::{self, Model, Project},
+    ui::{self, LinkData, Node, View},
 };
-use slint::{ComponentHandle, LogicalPosition, VecModel, Weak};
+use slint::{ComponentHandle, LogicalPosition, VecModel};
 use std::sync::{mpsc::Sender, Arc, RwLock};
 
-pub fn setup(project: Arc<RwLock<Project>>, ui: &View, tx: Sender<Event>) {
+pub fn setup(model: Arc<RwLock<Model>>, ui: &View, tx: Sender<Event>) {
     ui.set_floating(ui::FloatingLinkData {
         floating_state: ui::FloatingState::None,
         ..Default::default()
     });
 
     setup_node_logic(ui, tx.clone());
-    setup_link_logic(ui, project.clone(), tx);
+    setup_link_logic(ui, model.clone(), tx);
     setup_move_area_logic(ui);
-    refresh_ui_links(ui, project.clone());
+
+    let model = model.read().unwrap();
+    let project = model.tabs().selected_project();
+    refresh_ui_links(ui, project);
     refresh_ui_nodes(ui, project);
 }
 
-pub fn notify(ui: Weak<View>, project: Arc<RwLock<Project>>, evt: Event) {
-    ui.upgrade_in_event_loop(move |ui| {
-        use Event::*;
-        match evt {
-            SetNodePosition(..) => {
-                refresh_ui_nodes(&ui, project.clone());
-                refresh_ui_links(&ui, project);
-            }
-            RemoveLink(..) => {
-                refresh_ui_links(&ui, project);
-            }
-            AddLink(..) => {
-                refresh_ui_links(&ui, project);
-            }
-            AddNode(..) => {
-                refresh_ui_nodes(&ui, project);
-            }
+pub fn notify(ui: &View, model: &Model, evt: &Event) {
+    use Event::*;
+    let project = model.tabs().selected_project();
+    match evt {
+        SetNodePosition(..) | SelectTab(..) | NewTab => {
+            refresh_ui_nodes(ui, project);
+            refresh_ui_links(ui, project);
         }
-    })
-    .unwrap()
+        RemoveLink(..) | AddLink(..) => {
+            refresh_ui_links(ui, project);
+        }
+        AddNode(..) => {
+            refresh_ui_nodes(ui, project);
+        }
+        SetCommandSearch(..) => {}
+    }
 }
 
-fn refresh_ui_links(ui: &View, project: Arc<RwLock<Project>>) {
+fn refresh_ui_links(ui: &View, project: &Project) {
     ui.set_links(VecModel::from_slice(
         &project
-            .read()
-            .unwrap()
             .get_links()
             .iter()
             .map(|l| LinkData {
@@ -60,15 +56,13 @@ fn refresh_ui_links(ui: &View, project: Arc<RwLock<Project>>) {
     ))
 }
 
-fn refresh_ui_nodes(ui: &View, project: Arc<RwLock<Project>>) {
+fn refresh_ui_nodes(ui: &View, project: &Project) {
     ui.set_nodes(VecModel::from_slice(
         &project
-            .read()
-            .unwrap()
             .get_nodes()
             .iter()
             .map(|ni| {
-                let n = project.read().unwrap().get_available_node(&ni.ty).unwrap();
+                let n = project.get_available_node(&ni.ty).unwrap();
                 Node {
                     inputs: VecModel::from_slice(
                         &n.inputs
@@ -91,14 +85,15 @@ fn refresh_ui_nodes(ui: &View, project: Arc<RwLock<Project>>) {
             .collect::<Vec<_>>(),
     ))
 }
-fn setup_link_logic(ui: &View, project: Arc<RwLock<Project>>, tx: Sender<Event>) {
+fn setup_link_logic(ui: &View, model: Arc<RwLock<Model>>, tx: Sender<Event>) {
     ui.global::<ui::LinkLogic>().on_new_link_from_output({
         let ui = ui.as_weak();
         let tx = tx.clone();
-        let project = project.clone();
+        let model = model.clone();
         move |node_idx, slot_idx| {
             let ui = ui.upgrade().unwrap();
-            let project = project.read().unwrap();
+            let model = model.read().unwrap();
+            let project = model.tabs().selected_project();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -133,10 +128,11 @@ fn setup_link_logic(ui: &View, project: Arc<RwLock<Project>>, tx: Sender<Event>)
     ui.global::<ui::LinkLogic>().on_new_link_from_input({
         let ui = ui.as_weak();
         let tx = tx.clone();
-        let project = project.clone();
+        let model = model.clone();
         move |node_idx, slot_idx| {
             let ui = ui.upgrade().unwrap();
-            let project = project.read().unwrap();
+            let model = model.read().unwrap();
+            let project = model.tabs().selected_project();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -172,10 +168,11 @@ fn setup_link_logic(ui: &View, project: Arc<RwLock<Project>>, tx: Sender<Event>)
     ui.global::<ui::LinkLogic>().on_attach_link_to_input({
         let ui = ui.as_weak();
         let tx = tx.clone();
-        let project = project.clone();
+        let model = model.clone();
         move |node_idx, slot_idx| {
             let ui = ui.upgrade().unwrap();
-            let project = project.read().unwrap();
+            let model = model.read().unwrap();
+            let project = model.tabs().selected_project();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))
@@ -203,10 +200,11 @@ fn setup_link_logic(ui: &View, project: Arc<RwLock<Project>>, tx: Sender<Event>)
     });
     ui.global::<ui::LinkLogic>().on_attach_link_to_output({
         let ui = ui.as_weak();
-        let project = project.clone();
+        let model = model.clone();
         move |node_idx, slot_idx| {
             let ui = ui.upgrade().unwrap();
-            let project = project.read().unwrap();
+            let model = model.read().unwrap();
+            let project = model.tabs().selected_project();
             if let Some(slot_ty) = project
                 .get_node(node_idx as usize)
                 .and_then(|ni| project.get_available_node(&ni.ty))

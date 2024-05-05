@@ -1,6 +1,6 @@
 import { LineEdit } from "std-widgets.slint";
 
-export struct Item {
+export struct SearchItem {
     id: string,
     name: string,
     description: string,
@@ -9,7 +9,8 @@ export struct Item {
 
 export global PaletteSearch {
     callback add_node(string);
-    callback search(string) -> [Item];
+    callback search(string);
+    callback reset_search();
 }
 
 component Input inherits Rectangle {
@@ -73,7 +74,7 @@ component ResultItemArrow inherits Rectangle {
 }
 
 component ResultItem inherits Rectangle {
-    in property<Item> item;
+    in property<SearchItem> item;
     in property<brush> item-color;
     in property<bool> has-focus : false;
 
@@ -132,7 +133,7 @@ component ResultItem inherits Rectangle {
 export component Palette inherits Rectangle {
     callback closed();
 
-    property<[Item]> results : [];
+    in property<[SearchItem]> results;
     property<int> active-result : 0;
 
     width: 100%;
@@ -185,13 +186,13 @@ export component Palette inherits Rectangle {
                 input := Input {
                     height: 10%;
                     edited(query) => {
-                        root.results = PaletteSearch.search(query);
+                        PaletteSearch.search(query);
                     }
 
                     enter() => {
                         if (results.length > 0) {
                             PaletteSearch.add_node(results[active-result].id);
-                            results = [];
+                            PaletteSearch.reset_search();
                         }
                         root.toggle();
                     }
@@ -209,7 +210,7 @@ export component Palette inherits Rectangle {
 
                     on-click(id) => {
                         PaletteSearch.add_node(id);
-                        results = [];
+                        PaletteSearch.reset_search();
                         input.clear();
                         root.toggle();
                     }

@@ -7,58 +7,145 @@ use crate::{
     ui::View,
 };
 use slint::Weak;
-use std::{collections::HashMap, sync::mpsc::Receiver};
+use std::{
+    collections::HashMap,
+    sync::{mpsc::Receiver, Arc, RwLock},
+};
 
 mod command_palette;
 mod node_view;
+mod tabs;
 
+#[derive(Debug)]
 pub enum Event {
     SetNodePosition(usize, f32, f32),
+    AddNode(model::project::NodeType),
     AddLink(model::project::Link),
     RemoveLink(usize),
-    AddNode(model::project::NodeType),
+    SelectTab(usize),
+    NewTab,
+    SetCommandSearch(String),
 }
 
-pub struct Controller {
+pub struct Mediator {
     rx: Receiver<Event>,
-    model: Model,
+    model: Arc<RwLock<Model>>,
 }
 
-impl Controller {
+impl Mediator {
     pub fn new(ui: &View, mut model: Model) -> Self {
         let (tx, rx) = std::sync::mpsc::channel();
+
         populate_available_nodes(&mut model);
-        node_view::setup(model.project(), ui, tx.clone());
-        command_palette::setup(model.project(), ui, tx);
+
+        let model = Arc::new(RwLock::new(model));
+
+        tabs::setup(model.clone(), ui, tx.clone());
+        node_view::setup(model.clone(), ui, tx.clone());
+        command_palette::setup(model.clone(), ui, tx.clone());
+
         Self { rx, model }
     }
 
     pub fn run(self, ui: Weak<View>) {
         for evt in self.rx.iter() {
+            dbg!(&evt);
             use Event::*;
             match evt {
+                SetCommandSearch(ref query) => {
+                    let mut model = self.model.write().unwrap();
+                    model.set_command_search(query.clone());
+
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            command_palette::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
+                }
                 SetNodePosition(node_idx, x, y) => {
-                    self.model.project().write().unwrap().set_node_position(
-                        node_idx as usize,
-                        x,
-                        y,
-                    );
-                    node_view::notify(ui.clone(), self.model.project(), evt);
+                    let mut model = self.model.write().unwrap();
+                    model
+                        .tabs_mut()
+                        .selected_project_mut()
+                        .set_node_position(node_idx, x, y);
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
                 }
-
-                AddLink(ref lnk) => {
-                    self.model.project().write().unwrap().add_link(lnk.clone());
-                    node_view::notify(ui.clone(), self.model.project(), evt);
-                }
-
-                RemoveLink(i) => {
-                    self.model.project().write().unwrap().remove_link(i);
-                    node_view::notify(ui.clone(), self.model.project(), evt);
-                }
-
                 AddNode(ref ty) => {
-                    self.model.project().write().unwrap().add_node(ty.clone());
-                    node_view::notify(ui.clone(), self.model.project(), evt);
+                    let mut model = self.model.write().unwrap();
+                    model.tabs_mut().selected_project_mut().add_node(ty.clone());
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
+                }
+                AddLink(ref lnk) => {
+                    let mut model = self.model.write().unwrap();
+                    model
+                        .tabs_mut()
+                        .selected_project_mut()
+                        .add_link(lnk.clone());
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
+                }
+                RemoveLink(i) => {
+                    let mut model = self.model.write().unwrap();
+                    model.tabs_mut().selected_project_mut().remove_link(i);
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
+                }
+                SelectTab(i) => {
+                    let mut model = self.model.write().unwrap();
+                    model.tabs_mut().select_tab(i);
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                            tabs::notify(&ui, &model, &evt);
+                            command_palette::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
+                }
+                NewTab => {
+                    let mut model = self.model.write().unwrap();
+                    model.tabs_mut().new_tab();
+                    ui.upgrade_in_event_loop({
+                        let model = self.model.clone();
+                        move |ui| {
+                            let model = model.read().unwrap();
+                            node_view::notify(&ui, &model, &evt);
+                            tabs::notify(&ui, &model, &evt);
+                            command_palette::notify(&ui, &model, &evt);
+                        }
+                    })
+                    .unwrap()
                 }
             }
         }
@@ -117,8 +204,7 @@ fn populate_available_nodes(model: &mut Model) {
         })
         .unwrap_or(dummy_nodes);
     model
-        .project()
-        .write()
-        .unwrap()
+        .tabs_mut()
+        .selected_project_mut()
         .set_available_nodes(available_nodes);
 }

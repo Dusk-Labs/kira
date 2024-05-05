@@ -1,0 +1,49 @@
+export global TabLogic {
+    callback select_tab(int);
+    callback new_tab();
+}
+
+export component Tabs inherits Rectangle {
+    in property <[string]> tab_names;
+    in property <int> selected_tab;
+    preferred-width: 100%;
+    height: 5mm;
+    background: #010101;
+    HorizontalLayout {
+        alignment: LayoutAlignment.start;
+        spacing: 2px;
+        for tn[idx] in tab_names: Rectangle {
+            width: 2cm;
+            background: idx == selected_tab ? #1f1f1f: #2f2f2f;
+            border-top-left-radius: 1.5mm;
+            border-top-right-radius: 1.5mm;
+            Text {
+                color: white;
+                text: tn;
+            }
+            TouchArea {
+                clicked => {
+                    TabLogic.select_tab(idx);
+                }
+            }
+        }
+        HorizontalLayout {
+            padding: 2px;
+            Rectangle {
+                width: 5mm;
+                background: #2f2f2f;
+                border-radius: 1.5mm;
+                Text {
+                    color: white;
+                    text: "+";
+                }
+                TouchArea {
+                    clicked => {
+                        TabLogic.new_tab();
+                    }
+                }
+            }
+        }
+        
+    }
+}
