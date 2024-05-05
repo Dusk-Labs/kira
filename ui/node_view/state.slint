@@ -1,0 +1,36 @@
+export struct Slot {
+    name: string,
+    ty: string,
+}
+
+export struct NodeData { 
+    x: length,
+    y: length,
+    width: length,
+    text: string,
+    inputs: [Slot],
+    outputs: [Slot],
+}
+
+export struct LinkData {
+    src: int,
+    src_slot: int,
+    dst: int,
+    dst_slot: int,
+    ty: string,
+}
+
+export enum FloatingState {
+    src_attached,
+    dst_attached,
+    none,
+}
+
+export struct FloatingLinkData {
+    floating_state: FloatingState,
+    node: int,
+    node_slot: int,
+    ty: string,
+    x: length,
+    y: length,
+}

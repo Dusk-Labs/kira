@@ -1,7 +1,7 @@
-import { Graph, Node, Slot, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "@ui/node_view.slint";
-import { SearchItem, Palette, PaletteSearch } from "@ui/command_palette.slint";
-import { Timeline } from "@ui/timeline.slint";
-import { Tabs, TabLogic } from "@ui/tabs.slint";
+import { Graph, NodeData, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "node_view.slint";
+import { SearchItem, Palette, PaletteSearch } from "command_palette.slint";
+import { Timeline } from "timeline.slint";
+import { Tabs, TabLogic } from "tabs.slint";
 
 export {
     PointerEventKind,
@@ -13,7 +13,7 @@ export {
 }
 
 export component View inherits Window {
-    in property <[Node]> nodes;
+    in property <[NodeData]> nodes;
     in property <[LinkData]> links;
     in property <FloatingLinkData> floating;
     in property <int> selected_tab;

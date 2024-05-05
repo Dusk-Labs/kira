@@ -1,0 +1,85 @@
+import { NodeData, LinkData } from "state.slint";
+
+export global LinkLogic {
+    callback new_link_from_output(int, int);
+    callback attach_link_to_output(int, int);
+    callback new_link_from_input(int, int);
+    callback attach_link_to_input(int, int);
+}
+
+
+export global LinkLayout {
+    pure public function colorFromstring(ty: string) -> color {
+        if ty == "TXT" {
+            orange
+        } else if ty == "IMG"{
+            lightblue
+        } else {
+            red
+        }
+    }
+    pure public function srcX(src: NodeData) -> float {
+        return (src.x + src.width - 10px) / 1px;
+    }
+    pure public function srcY(src: NodeData, src_slot: int) -> float {
+        return src.y / 1px + 15 * src_slot;
+    }
+    pure public function dstX(dst: NodeData) -> float {
+        return dst.x / 1px;
+    }
+    pure public function dstY(dst: NodeData, dst_slot: int) -> float {
+        return dst.y / 1px + 15 * dst_slot;
+    }
+    
+}
+
+export component Link inherits Rectangle {
+    in property <LinkData> link;
+    in property <[NodeData]> nodes;
+    in property <float> viewbox-height;
+    in property <float> viewbox-width;
+
+
+    Path {
+        stroke: LinkLayout.colorFromstring(link.ty);
+        viewbox-height: viewbox-height;
+        viewbox-width: viewbox-width;
+        stroke-width: 3px;
+
+        MoveTo { x: LinkLayout.srcX(nodes[link.src])+5; y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; }
+        CubicTo { 
+            control-1-x: LinkLayout.srcX(nodes[link.src])+5 + 100;
+            control-1-y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; 
+
+            control-2-x: LinkLayout.dstX(nodes[link.dst])+5 - 100;
+            control-2-y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
+            x: LinkLayout.dstX(nodes[link.dst])+5;
+            y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
+        }
+    }
+}
+
+export component LinkSlots inherits Rectangle {
+    in property <LinkData> link;
+    in property <[NodeData]> nodes;
+    Rectangle {
+        x: LinkLayout.srcX(nodes[link.src])*1px;
+        y: LinkLayout.srcY(nodes[link.src], link.src_slot)*1px;
+        width: 10px;
+        height: 10px;
+        border-bottom-left-radius: 5px;
+        border-top-left-radius: 5px;
+        background: LinkLayout.colorFromstring(link.ty);
+    }
+    Rectangle {
+        x: LinkLayout.dstX(nodes[link.dst])*1px;
+        y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)*1px;
+        width: 10px;
+        height: 10px;
+        border-bottom-right-radius: 5px;
+        border-top-right-radius: 5px;
+        background: LinkLayout.colorFromstring(link.ty);
+    }
+    
+}
+

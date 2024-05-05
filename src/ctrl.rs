@@ -71,7 +71,7 @@ impl Mediator {
             }
             use Event::*;
 
-            dbg!(&evt);
+            println!("{:?}", &evt);
             match evt {
                 SetCommandSearch(ref query) => {
                     let mut model = self.model.write();

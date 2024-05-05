@@ -1,0 +1,94 @@
+import { FloatingState, FloatingLinkData, NodeData } from "state.slint";
+import { LinkLayout } from "links.slint";
+
+export component MoveArea inherits TouchArea {
+    in-out property <FloatingLinkData> floating;
+    pointer-event(evt) => {
+        self.enabled = false;
+        MoveAreaLogic.mouse_event_tap_hack(
+            self.absolute-position.x + self.x + self.mouse-x,
+            self.absolute-position.y + self.y + self.mouse-y,
+            self.x + self.mouse-x,
+            self.y + self.mouse-y,
+            evt
+        );
+        self.enabled = true;
+    }
+}
+
+export global MoveAreaLogic {
+    callback mouse_event_tap_hack(length, length, length, length, PointerEvent);
+    callback reset_floating_state();
+}
+
+export component Floating inherits Rectangle {
+    in property <FloatingLinkData> floating;
+    in property <[NodeData]> nodes;
+    in property <float> mouse-x;
+    in property <float> mouse-y;
+    in property <float> viewbox-height;
+    in property <float> viewbox-width;
+    Path {
+        stroke: LinkLayout.colorFromstring(floating.ty);
+        viewbox-height: viewbox-height;
+        viewbox-width: viewbox-width;
+        stroke-width: 3px;
+
+        MoveTo {
+            x: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcX(nodes[floating.node])+5
+                : LinkLayout.dstX(nodes[floating.node])+5;
+            y: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
+                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+        }
+        CubicTo { 
+            control-1-x: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcX(nodes[floating.node])+5 + 100
+                : LinkLayout.dstX(nodes[floating.node])+5 - 100;
+            control-1-y: floating.floating_state == FloatingState.src_attached
+                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
+                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+            control-2-x: floating.x/1px;
+            control-2-y: floating.y/1px; 
+            x: floating.x/1px;
+            y: floating.y/1px; 
+        }
+    }
+}
+
+export component FloatingSlots inherits Rectangle {
+    in property <FloatingLinkData> floating;
+    in property <[NodeData]> nodes;
+    in property <float> mouse-x;
+    in property <float> mouse-y;
+    in property <float> viewbox-height;
+    in property <float> viewbox-width;
+    Rectangle {
+        x: floating.floating_state == FloatingState.src_attached
+            ? LinkLayout.srcX(nodes[floating.node])*1px
+            : LinkLayout.dstX(nodes[floating.node])*1px;
+        y: floating.floating_state == FloatingState.src_attached
+            ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)*1px
+            : LinkLayout.dstY(nodes[floating.node], floating.node_slot)*1px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        border-bottom-left-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
+        border-top-left-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
+        border-bottom-right-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
+        border-top-right-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
+        background: LinkLayout.colorFromstring(floating.ty);
+    }
+    // Rectangle {
+    //     x: floating.x - 5px;
+    //     y: floating.y - 5px;
+    //     width: 10px;
+    //     height: 10px;
+    //     border-bottom-left-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
+    //     border-top-left-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
+    //     border-bottom-right-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
+    //     border-top-right-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
+    //     background: LinkLayout.colorFromstring(floating.ty);
+    // }
+}

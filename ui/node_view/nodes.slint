@@ -1,0 +1,115 @@
+import { LinkData, NodeData, FloatingLinkData, FloatingState } from "state.slint";
+import { LinkLayout, LinkLogic } from "links.slint";
+
+export global NodeLogic {
+    callback move_node(int, length, length);
+}
+
+export component Node inherits Rectangle {
+    in-out property <NodeData> n;
+    in property <int> node_idx;
+    in-out property <[NodeData]> nodes;
+    in property <FloatingLinkData> floating;
+    x: n.x;
+    y: n.y - 10px;
+    background: #0f0f0f;
+    width: n.width;
+    height: l.preferred-height;
+    border-radius: 3px;
+    TouchArea {
+        moved => {
+            if (self.pressed) {
+                n.x += self.mouse-x - self.pressed-x;
+                n.y += self.mouse-y - self.pressed-y;
+                nodes[node_idx] = n;
+            }
+        }
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.up {
+                NodeLogic.move_node(
+                    node_idx,
+                    n.x + self.mouse-x - self.pressed-x,
+                    n.y + self.mouse-y - self.pressed-y,
+                );
+            } 
+        }
+
+        mouse-cursor: move;
+    }
+
+    l := VerticalLayout {
+        padding-top: 10px;
+        padding-bottom: 5px;
+        HorizontalLayout {
+            VerticalLayout {
+                spacing: 5px;
+                for input[input_idx] in n.inputs: HorizontalLayout {
+                    spacing: 2px;
+                    Rectangle {
+                        // x: n.x - 10px;
+                        width: 10px;
+                        height: 10px;
+                        border-bottom-right-radius: 5px;
+                        border-top-right-radius: 5px;
+                        background: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty) : LinkLayout.colorFromstring(input.ty).darker(1);
+                        input_ta := TouchArea {
+                            clicked => {
+                                if floating.floating_state == FloatingState.none {
+                                    LinkLogic.new_link_from_input(node_idx, input_idx);
+                                } else {
+                                    LinkLogic.attach_link_to_input(node_idx, input_idx);
+                                }
+                            }
+                        }
+                    }
+                    Text {
+                        color: white;
+                        height: 10px;
+                        text: input.name;
+                        horizontal-alignment: TextHorizontalAlignment.left;
+                        font-size: 6px;
+                    }
+                }
+            }
+            VerticalLayout {
+                spacing: 5px;
+                for output[output_idx] in n.outputs: HorizontalLayout {
+                    spacing: 2px;
+                    Text {
+                        color: white;
+                        height: 10px;
+                        text: output.name;
+                        horizontal-alignment: TextHorizontalAlignment.right;
+                        font-size: 6px;
+                    }
+                    Rectangle {
+                        // x: n.x + n.width;
+                        width: 10px;
+                        height: 10px;
+                        border-bottom-left-radius: 5px;
+                        border-top-left-radius: 5px;
+                        background: output_ta.has-hover ? LinkLayout.colorFromstring(output.ty) : LinkLayout.colorFromstring(output.ty).darker(1);
+                        output_ta := TouchArea {
+                            clicked => {
+                                if floating.floating_state == FloatingState.none {
+                                    LinkLogic.new_link_from_output(node_idx, output_idx);
+                                } else {
+                                    LinkLogic.attach_link_to_output(node_idx, output_idx);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Rectangle {
+            Text {
+                color: white;
+                text: n.text;
+                wrap: TextWrap.word-wrap;
+            }
+            padding: 15px;
+        }
+    }
+    
+}
