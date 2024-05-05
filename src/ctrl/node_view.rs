@@ -1,12 +1,11 @@
+use super::{Aro, Controller};
 use crate::{
     ctrl::Event,
     model::{self, Model, Project},
-    ui::{self, LinkData, Node, View},
+    ui::{self, LinkData, Node, Slot, View},
 };
 use slint::{ComponentHandle, LogicalPosition, VecModel};
 use std::sync::mpsc::Sender;
-
-use super::{Aro, Controller};
 
 pub struct NodeView;
 
@@ -73,17 +72,23 @@ fn refresh_ui_nodes(ui: &View, project: &Project) {
                     inputs: VecModel::from_slice(
                         &n.inputs
                             .iter()
-                            .map(|(_, lt)| lt.clone().into())
+                            .map(|(name, ty)| Slot {
+                                name: name.clone().into(),
+                                ty: ty.clone().into(),
+                            })
                             .collect::<Vec<_>>(),
                     ),
                     outputs: VecModel::from_slice(
                         &n.outputs
                             .iter()
-                            .map(|(_, lt)| lt.clone().into())
+                            .map(|(name, ty)| Slot {
+                                name: name.clone().into(),
+                                ty: ty.clone().into(),
+                            })
                             .collect::<Vec<_>>(),
                     ),
                     text: n.name.clone().into(),
-                    width: 90.,
+                    width: 100.,
                     x: ni.pos.0,
                     y: ni.pos.1,
                 }
@@ -239,34 +244,46 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
 }
 
 fn setup_move_area_logic(ui: &View) {
-    ui.global::<ui::MoveAreaLogic>().on_click_event_hack({
+    ui.global::<ui::MoveAreaLogic>().on_mouse_event_tap_hack({
         let ui = ui.as_weak();
-        move |x, y, evt| {
+        move |abs_x, abs_y, rel_x, rel_y, evt| {
             let ui = ui.upgrade().unwrap();
-            ui.window()
-                .dispatch_event(slint::platform::WindowEvent::PointerPressed {
-                    position: LogicalPosition { x, y },
-                    button: evt.button,
-                });
-            ui.window()
-                .dispatch_event(slint::platform::WindowEvent::PointerReleased {
-                    position: LogicalPosition { x, y },
-                    button: evt.button,
-                });
+
+            let position = LogicalPosition { x: abs_x, y: abs_y };
+            let button = evt.button;
+
+            use slint::private_unstable_api::re_exports::PointerEventKind::*;
+            match evt.kind {
+                Up => {
+                    ui.window()
+                        .dispatch_event(slint::platform::WindowEvent::PointerReleased {
+                            position,
+                            button,
+                        });
+                }
+                Down => ui
+                    .window()
+                    .dispatch_event(slint::platform::WindowEvent::PointerPressed {
+                        position,
+                        button,
+                    }),
+                Move => {
+                    ui.set_floating(ui::FloatingLinkData {
+                        x: rel_x,
+                        y: rel_y,
+                        ..ui.get_floating()
+                    });
+
+                    // FIXME
+                    // ui.window()
+                    //     .dispatch_event(slint::platform::WindowEvent::PointerMoved { position })
+                }
+                Cancel => ui
+                    .window()
+                    .dispatch_event(slint::platform::WindowEvent::PointerExited {}),
+            }
         }
     });
-    ui.global::<ui::MoveAreaLogic>()
-        .on_update_floating_position({
-            let ui = ui.as_weak();
-            move |x, y| {
-                let ui = ui.upgrade().unwrap();
-                ui.set_floating(ui::FloatingLinkData {
-                    x,
-                    y,
-                    ..ui.get_floating()
-                });
-            }
-        });
     ui.global::<ui::MoveAreaLogic>().on_reset_floating_state({
         let ui = ui.as_weak();
         move || {

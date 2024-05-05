@@ -1,3 +1,4 @@
+use self::{command_palette::CommandPalette, node_view::NodeView, tabs::Tabs};
 use crate::{
     model::{
         self,
@@ -12,8 +13,6 @@ use std::{
     collections::HashMap,
     sync::mpsc::{Receiver, Sender},
 };
-
-use self::{command_palette::CommandPalette, node_view::NodeView, tabs::Tabs};
 
 mod command_palette;
 mod node_view;
@@ -124,7 +123,7 @@ impl Mediator {
 
 fn populate_available_nodes(model: &mut Model) {
     let mut dummy_nodes: HashMap<NodeType, Node> = HashMap::new();
-    for i in 0..20 {
+    for i in 0..5 {
         let name = format!("A{}", i);
         dummy_nodes.insert(
             NodeType(name.clone()),
@@ -139,6 +138,28 @@ fn populate_available_nodes(model: &mut Model) {
                 ],
                 name,
                 description: "Node of type A".into(),
+                category: "Dummy".into(),
+            },
+        );
+        let name = format!("B{}", i);
+        dummy_nodes.insert(
+            NodeType(name.clone()),
+            Node {
+                inputs: vec![("Image".into(), "IMG".into())],
+                outputs: vec![],
+                name,
+                description: "Node of type B".into(),
+                category: "Dummy".into(),
+            },
+        );
+        let name = format!("C{}", i);
+        dummy_nodes.insert(
+            NodeType(name.clone()),
+            Node {
+                inputs: vec![],
+                outputs: vec![("Text".into(), "TXT".into()), ("Text".into(), "TXT".into())],
+                name,
+                description: "Node of type C".into(),
                 category: "Dummy".into(),
             },
         );

@@ -37,7 +37,7 @@ impl Project {
     pub fn add_node(&mut self, id: NodeType) {
         self.nodes.push(NodeInstance {
             ty: id,
-            pos: (0., 0.),
+            pos: (20., 20.),
         });
     }
     pub fn set_node_position(&mut self, node_idx: usize, x: f32, y: f32) {
