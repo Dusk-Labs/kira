@@ -25,11 +25,17 @@ impl Controller for Tabs {
                 tx.send(Event::NewTab).unwrap();
             }
         });
+        ui.global::<TabLogic>().on_close_tab({
+            let tx = tx.clone();
+            move |closing| {
+                tx.send(Event::CloseTab(closing as usize)).unwrap();
+            }
+        });
     }
     fn notify(ui: &View, model: &Model, evt: &Event) {
         use Event::*;
         match evt {
-            SelectTab(..) | NewTab => {
+            SelectTab(..) | NewTab | CloseTab(..) => {
                 refresh(model, ui);
             }
             SetCommandSearch(..) | SetNodePosition(..) | AddNode(..) | RemoveLink(..)
@@ -45,5 +51,12 @@ fn refresh(model: &Model, ui: &View) {
     }
 
     ui.set_tab_names(VecModel::from_slice(&dummy_names));
-    ui.set_selected_tab(model.tabs().selected_tab() as i32);
+    ui.set_selected_tab({
+        let selected = model.tabs().selected_tab();
+        selected
+            .map(i32::try_from)
+            .transpose()
+            .unwrap()
+            .unwrap_or(-1)
+    });
 }

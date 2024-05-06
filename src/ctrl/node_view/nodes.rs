@@ -27,38 +27,39 @@ impl Controller for Nodes {
 }
 
 fn refresh(ui: &View, model: &Model) {
-    let project = model.tabs().selected_project();
-    ui.set_nodes(VecModel::from_slice(
-        &project
-            .get_nodes()
-            .iter()
-            .map(|ni| {
-                let n = project.get_available_node(&ni.ty).unwrap();
-                NodeData {
-                    inputs: VecModel::from_slice(
-                        &n.inputs
-                            .iter()
-                            .map(|(name, ty)| Slot {
-                                name: name.clone().into(),
-                                ty: ty.clone().into(),
-                            })
-                            .collect::<Vec<_>>(),
-                    ),
-                    outputs: VecModel::from_slice(
-                        &n.outputs
-                            .iter()
-                            .map(|(name, ty)| Slot {
-                                name: name.clone().into(),
-                                ty: ty.clone().into(),
-                            })
-                            .collect::<Vec<_>>(),
-                    ),
-                    text: n.name.clone().into(),
-                    width: 100.,
-                    x: ni.pos.0,
-                    y: ni.pos.1,
-                }
-            })
-            .collect::<Vec<_>>(),
-    ))
+    if let Some(project) = model.tabs().selected_project() {
+        ui.set_nodes(VecModel::from_slice(
+            &project
+                .get_nodes()
+                .iter()
+                .map(|ni| {
+                    let n = project.get_available_node(&ni.ty).unwrap();
+                    NodeData {
+                        inputs: VecModel::from_slice(
+                            &n.inputs
+                                .iter()
+                                .map(|(name, ty)| Slot {
+                                    name: name.clone().into(),
+                                    ty: ty.clone().into(),
+                                })
+                                .collect::<Vec<_>>(),
+                        ),
+                        outputs: VecModel::from_slice(
+                            &n.outputs
+                                .iter()
+                                .map(|(name, ty)| Slot {
+                                    name: name.clone().into(),
+                                    ty: ty.clone().into(),
+                                })
+                                .collect::<Vec<_>>(),
+                        ),
+                        text: n.name.clone().into(),
+                        width: 100.,
+                        x: ni.pos.0,
+                        y: ni.pos.1,
+                    }
+                })
+                .collect::<Vec<_>>(),
+        ))
+    }
 }

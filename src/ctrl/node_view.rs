@@ -19,7 +19,7 @@ impl Controller for NodeView {
     fn notify(ui: &View, model: &Model, evt: &Event) {
         use Event::*;
         match evt {
-            SetNodePosition(..) | SelectTab(..) | NewTab => {
+            SetNodePosition(..) | CloseTab(..) | SelectTab(..) | NewTab => {
                 Nodes::notify(ui, model, evt);
                 Links::notify(ui, model, evt);
             }

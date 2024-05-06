@@ -25,6 +25,7 @@ pub enum Event {
     AddLink(model::project::Link),
     RemoveLink(usize),
     SelectTab(usize),
+    CloseTab(usize),
     NewTab,
     SetCommandSearch(String),
 }
@@ -81,28 +82,30 @@ impl Mediator {
                 }
                 SetNodePosition(node_idx, x, y) => {
                     let mut model = self.model.write();
-                    model
-                        .tabs_mut()
-                        .selected_project_mut()
-                        .set_node_position(node_idx, x, y);
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        project.set_node_position(node_idx, x, y);
+                    }
                     notify!(NodeView);
                 }
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
-                    model.tabs_mut().selected_project_mut().add_node(ty.clone());
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        project.add_node(ty.clone());
+                    }
                     notify!(NodeView);
                 }
                 AddLink(ref lnk) => {
                     let mut model = self.model.write();
-                    model
-                        .tabs_mut()
-                        .selected_project_mut()
-                        .add_link(lnk.clone());
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        project.add_link(lnk.clone());
+                    }
                     notify!(NodeView);
                 }
                 RemoveLink(i) => {
                     let mut model = self.model.write();
-                    model.tabs_mut().selected_project_mut().remove_link(i);
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        project.remove_link(i);
+                    }
                     notify!(NodeView);
                 }
                 SelectTab(i) => {
@@ -114,6 +117,11 @@ impl Mediator {
                     let mut model = self.model.write();
                     model.tabs_mut().new_tab();
                     populate_available_nodes(&mut model);
+                    notify!(NodeView, Tabs, CommandPalette);
+                }
+                CloseTab(i) => {
+                    let mut model = self.model.write();
+                    model.tabs_mut().close_tab(i);
                     notify!(NodeView, Tabs, CommandPalette);
                 }
             }
@@ -194,8 +202,7 @@ fn populate_available_nodes(model: &mut Model) {
                 .collect()
         })
         .unwrap_or(dummy_nodes);
-    model
-        .tabs_mut()
-        .selected_project_mut()
-        .set_available_nodes(available_nodes);
+    if let Some(project) = model.tabs_mut().selected_project_mut() {
+        project.set_available_nodes(available_nodes);
+    }
 }

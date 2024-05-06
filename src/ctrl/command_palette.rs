@@ -18,7 +18,7 @@ impl Controller for CommandPalette {
         use Event::*;
         match evt {
             AddNode(..) | SetNodePosition(..) | RemoveLink(..) | AddLink(..) => {}
-            SelectTab(..) | NewTab | SetCommandSearch(..) => {
+            SelectTab(..) | CloseTab(..) | NewTab | SetCommandSearch(..) => {
                 refresh(model, ui);
             }
         }
@@ -50,8 +50,7 @@ fn refresh(model: &Model, ui: &View) {
     let command_search = model.command_search();
     if command_search.is_empty() {
         ui.set_command_palette_results(VecModel::from_slice(&[]))
-    } else {
-        let project = model.tabs().selected_project();
+    } else if let Some(project) = model.tabs().selected_project() {
         let res = project
             .search_available_nodes(command_search)
             .into_iter()

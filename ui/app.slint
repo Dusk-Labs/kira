@@ -25,9 +25,14 @@ export component View inherits Window {
     preferred-width: 30cm;
 
     title: "Kira Studio";
+    background: #0F0F0F;
 
     init() => {
         focus.focus();
+    }
+
+    function any_tab_selected() -> bool {
+        return selected_tab >= 0;
     }
 
     focus := FocusScope {
@@ -38,15 +43,14 @@ export component View inherits Window {
                 selected_tab: selected_tab;
                 tab_names: tab_names;
             }
-
             Graph {
+                visible: any_tab_selected();
                 nodes: nodes;
                 links: links;
                 floating: floating;
             }
-
-
             timeline := Timeline {
+                visible: any_tab_selected();
                 width: 100%;
                 height: 1cm;
             }

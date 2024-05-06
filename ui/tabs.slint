@@ -1,6 +1,7 @@
 export global TabLogic {
     callback select_tab(int);
     callback new_tab();
+    callback close_tab(int);
 }
 
 export component Tabs inherits Rectangle {
@@ -17,13 +18,30 @@ export component Tabs inherits Rectangle {
             background: idx == selected_tab ? #1f1f1f: #2f2f2f;
             border-top-left-radius: 1.5mm;
             border-top-right-radius: 1.5mm;
-            Text {
-                color: white;
-                text: tn;
-            }
             TouchArea {
                 clicked => {
                     TabLogic.select_tab(idx);
+                }
+            }
+            HorizontalLayout {
+                padding-left: 5px;
+                padding-right: 5px;
+                Text {
+                    horizontal-alignment:  TextHorizontalAlignment.center;
+                    vertical-alignment: TextVerticalAlignment.center;
+                    color: white;
+                    text: tn;
+                }
+                Image {
+                    width: 5pt; 
+                    source: @image-url("../assets/cross.svg");
+                    image-fit: contain;
+                    colorize: cross-ta.has-hover ? black : white;
+                    cross_ta := TouchArea {
+                        clicked => {
+                            TabLogic.close_tab(idx);
+                        }
+                    }
                 }
             }
         }
@@ -34,10 +52,10 @@ export component Tabs inherits Rectangle {
                 background: #2f2f2f;
                 border-radius: 1.5mm;
                 Text {
-                    color: white;
+                    color: new_ta.has-hover ? black : white;
                     text: "+";
                 }
-                TouchArea {
+                new_ta := TouchArea {
                     clicked => {
                         TabLogic.new_tab();
                     }

@@ -39,33 +39,43 @@ impl Model {
 #[derive(Debug)]
 pub struct Tabs {
     tabs: Vec<Project>,
-    selected_tab: usize,
+    selected_tab: Option<usize>,
 }
 
 impl Tabs {
     pub fn new() -> Self {
         Self {
             tabs: vec![Project::new()],
-            selected_tab: 0,
+            selected_tab: Some(0),
         }
     }
     pub fn len(&self) -> usize {
         self.tabs.len()
     }
-    pub fn selected_project(&self) -> &Project {
-        &self.tabs[self.selected_tab]
+    pub fn selected_project(&self) -> Option<&Project> {
+        self.selected_tab.map(|i| &self.tabs[i])
     }
-    pub fn selected_project_mut(&mut self) -> &mut Project {
-        &mut self.tabs[self.selected_tab]
+    pub fn selected_project_mut(&mut self) -> Option<&mut Project> {
+        self.selected_tab.map(|i| &mut self.tabs[i])
     }
     pub fn select_tab(&mut self, tab: usize) {
-        self.selected_tab = tab;
+        self.selected_tab = Some(tab);
     }
-    pub fn selected_tab(&self) -> usize {
+    pub fn selected_tab(&self) -> Option<usize> {
         self.selected_tab
     }
     pub fn new_tab(&mut self) {
         self.tabs.push(Project::new());
-        self.selected_tab = self.tabs.len() - 1;
+        self.selected_tab = Some(self.tabs.len() - 1);
+    }
+    pub fn close_tab(&mut self, tab: usize) {
+        self.tabs.remove(tab);
+        self.selected_tab = if self.tabs.is_empty() {
+            None
+        } else if let Some(selected) = self.selected_tab {
+            Some(selected.min(self.tabs.len() - 1))
+        } else {
+            None
+        }
     }
 }
