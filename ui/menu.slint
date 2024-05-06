@@ -1,0 +1,77 @@
+import { CheckBox } from "std-widgets.slint";
+
+export global MenuLogic { }
+
+component MenuPopupItem inherits Rectangle {
+    in property <string> name;
+    callback clicked();
+
+    background: ta.has-hover ? #3f3f3f : #2f2f2f;
+    preferred-width: txt.preferred-width + 20px;
+    preferred-height: txt.preferred-height + 10px;
+
+    HorizontalLayout {
+        alignment: LayoutAlignment.start;
+        padding-left: 10px;
+        padding-top: 5px;
+        txt := Text {
+            horizontal-alignment: TextHorizontalAlignment.left;
+            font-size: 8pt;
+            color: white;
+            text: name;
+        }
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+component TopLevelMenu inherits Rectangle {
+    in property <string> name;
+
+    preferred-width: file-text.preferred-width + 20px;
+    padding-left: 1px;
+
+    background: file_ta.has-hover ? #2f2f2f: #010101;
+    file_text := Text {
+        horizontal-alignment: TextHorizontalAlignment.left;
+        font-size: 8pt;
+        color: white;
+        text: name;
+    }
+    file_ta := TouchArea {
+        clicked => {
+            file_popup.show();
+        }
+    }
+    file_popup := PopupWindow {
+        x: 0px;
+        y: parent.height;
+        VerticalLayout { 
+            @children
+        }
+    }
+}
+
+export component Menu inherits Rectangle {
+    preferred-width: 100%;
+    height: 5mm;
+    background: #010101;
+    HorizontalLayout {
+        alignment: LayoutAlignment.start;
+        TopLevelMenu {
+            name: "File";
+            MenuPopupItem  {
+                name: "Lorem";
+                clicked => { debug ("Lorem Ipsup"); }
+            }
+            MenuPopupItem  { name: "Ipsum"; }
+            MenuPopupItem  { name: "Quit"; }
+        }
+        TopLevelMenu {
+            name: "Edit";
+            MenuPopupItem  { name: "Lorem"; }
+            MenuPopupItem  { name: "Ipsum"; }
+        }
+    }
+}
