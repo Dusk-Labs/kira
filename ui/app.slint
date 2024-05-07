@@ -1,4 +1,4 @@
-import { Graph, NodeData, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "node_view.slint";
+import { GraphLogic, Graph, NodeData, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "graph.slint";
 import { SearchItem, Palette, PaletteSearch } from "command_palette.slint";
 import { Timeline } from "timeline.slint";
 import { Tabs, TabLogic } from "tabs.slint";
@@ -11,7 +11,8 @@ export {
     LinkLogic,
     PaletteSearch,
     TabLogic,
-    MenuLogic
+    MenuLogic,
+    GraphLogic
 }
 
 export component View inherits Window {
@@ -22,6 +23,8 @@ export component View inherits Window {
     in property <[string]> tab_names;
     in property <[SearchItem]> command_palette_results;
     in property <float> zoom;
+    in property <float> offset-x;
+    in property <float> offset-y;
 
     preferred-height: 20cm;
     preferred-width: 30cm;
@@ -40,7 +43,7 @@ export component View inherits Window {
     focus := FocusScope {
 
         VerticalLayout {
-            Menu { }
+            Menu {}
             Tabs {
                 selected_tab: selected_tab;
                 tab_names: tab_names;
@@ -51,6 +54,11 @@ export component View inherits Window {
                 links: links;
                 floating: floating;
                 zoom: zoom;
+                original-offset-x: offset-x;
+                original-offset-y: offset-y;
+                offset-x: offset-x;
+                offset-y: offset-y;
+                clip: true;
             }
             timeline := Timeline {
                 visible: any_tab_selected();

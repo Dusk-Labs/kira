@@ -1,7 +1,7 @@
-import { MoveArea, MoveAreaLogic, Floating, FloatingSlots } from "node_view/floating.slint";
-import { NodeLogic,  Node } from "node_view/nodes.slint";
-import { Link, LinkSlots, LinkLogic } from "node_view/links.slint";
-import { Slot, NodeData, LinkData, FloatingState, FloatingLinkData } from "node_view/state.slint";
+import { MoveArea, MoveAreaLogic, Floating, FloatingSlots } from "graph/floating.slint";
+import { NodeLogic,  Node } from "graph/nodes.slint";
+import { Link, LinkSlots, LinkLogic } from "graph/links.slint";
+import { Slot, NodeData, LinkData, FloatingState, FloatingLinkData } from "graph/state.slint";
 
 export {
     MoveAreaLogic,
@@ -14,6 +14,11 @@ export {
     FloatingLinkData
 }
 
+export global GraphLogic {
+    callback set_zoom(float);
+    callback set_offset(float, float);
+}
+
 export component Graph inherits Rectangle {
     background: #1f1f1f;
     preferred-height: 100%;
@@ -23,12 +28,31 @@ export component Graph inherits Rectangle {
     in property <[LinkData]> links;
     in-out property <FloatingLinkData> floating;
 
+    in property <float> original-offset-x;
+    in property <float> original-offset-y;
+    in-out property <float> offset-x;
+    in-out property <float> offset-y;
+
     // catch mouse events in the background
     TouchArea {
         clicked => {
             if floating.floating_state != FloatingState.none {
                  MoveAreaLogic.reset_floating_state();
             }
+        }
+        moved => {
+            if (self.pressed) {
+                offset-x = original-offset-x + (self.mouse-x - self.pressed-x) / zoom /1px;
+                offset-y = original-offset-y + (self.mouse-y - self.pressed-y) / zoom /1px;
+            }
+        }
+        pointer-event(event) => {
+            if event.kind == PointerEventKind.up {
+                GraphLogic.set_offset(
+                    original-offset-x + (self.mouse-x - self.pressed-x) / zoom /1px,
+                    original-offset-y + (self.mouse-y - self.pressed-y) / zoom /1px,
+                );
+            } 
         }
     }
     Flickable {
@@ -38,7 +62,7 @@ export component Graph inherits Rectangle {
         viewport-y: - (zoom - 1) * 20cm;
         viewport-x: 0;
         flicked => { 
-            root.zoom = 1 - self.viewport-y/20cm;
+            GraphLogic.set_zoom(1 - self.viewport-y/20cm);
             // debug(root.zoom);
         }
         Rectangle {}
@@ -50,6 +74,8 @@ export component Graph inherits Rectangle {
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
         zoom: zoom;
+        offset-x: offset-x;
+        offset-y: offset-y;
     }
 
     for l[idx] in links : Link {
@@ -58,6 +84,8 @@ export component Graph inherits Rectangle {
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
         zoom: zoom;
+        offset-x: offset-x;
+        offset-y: offset-y;
     }
 
     for n[node_idx] in nodes : Node {
@@ -66,6 +94,8 @@ export component Graph inherits Rectangle {
         nodes: nodes;
         floating: floating;
         zoom: zoom;
+        offset-x: offset-x;
+        offset-y: offset-y;
     }
 
     if floating.floating_state != FloatingState.none: FloatingSlots {
@@ -74,12 +104,16 @@ export component Graph inherits Rectangle {
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
         zoom: zoom;
+        offset-x: offset-x;
+        offset-y: offset-y;
     }
 
     for l[idx] in links : LinkSlots {
         link: l;
         nodes: nodes;
         zoom: zoom;
+        offset-x: offset-x;
+        offset-y: offset-y;
     }
 
     if floating.floating_state != FloatingState.none: MoveArea {

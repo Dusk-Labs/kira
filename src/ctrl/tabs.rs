@@ -32,15 +32,8 @@ impl Controller for Tabs {
             }
         });
     }
-    fn notify(ui: &View, model: &Model, evt: &Event) {
-        use Event::*;
-        match evt {
-            Save | SaveAs | OpenFile | SelectTab(..) | NewTab | CloseTab(..) => {
-                refresh(model, ui);
-            }
-            SetCommandSearch(..) | SetNodePosition(..) | AddNode(..) | RemoveLink(..)
-            | AddLink(..) => {}
-        }
+    fn notify(ui: &View, model: &Model, _evt: &Event) {
+        refresh(model, ui);
     }
 }
 

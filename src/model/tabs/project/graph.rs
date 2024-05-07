@@ -5,6 +5,8 @@ use slint::SharedString;
 pub struct Graph {
     nodes: Vec<NodeInstance>,
     links: Vec<Link>,
+    zoom: f32,
+    offset: (f32, f32),
 }
 
 impl Graph {
@@ -12,12 +14,26 @@ impl Graph {
         Self {
             nodes: vec![],
             links: vec![],
+            zoom: 2.,
+            offset: (0., 0.),
         }
+    }
+    pub fn zoom(&self) -> f32 {
+        self.zoom
+    }
+    pub fn offset(&self) -> (f32, f32) {
+        self.offset
+    }
+    pub fn set_zoom(&mut self, zoom: f32) {
+        self.zoom = zoom;
+    }
+    pub fn set_offset(&mut self, offset: (f32, f32)) {
+        self.offset = offset;
     }
     pub fn add_node(&mut self, id: NodeType) {
         self.nodes.push(NodeInstance {
             ty: id,
-            pos: (20., 20.),
+            pos: (20. - self.offset.0, 20. - self.offset.1),
         });
     }
     pub fn set_node_position(&mut self, node_idx: usize, x: f32, y: f32) {

@@ -39,6 +39,8 @@ export component Link inherits Rectangle {
     in property <float> viewbox-height;
     in property <float> viewbox-width;
     in property <float> zoom;
+    in property <float> offset-x;
+    in property <float> offset-y;
 
     Path {
         stroke: LinkLayout.colorFromstring(link.ty);
@@ -47,18 +49,18 @@ export component Link inherits Rectangle {
         stroke-width: 3px;
 
         MoveTo {
-            x: (LinkLayout.srcX(nodes[link.src])+5) * zoom;
-            y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5) * zoom;
+            x: (LinkLayout.srcX(nodes[link.src])+5+offset-x) * zoom;
+            y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5 + offset-y) * zoom;
         }
         CubicTo { 
-            control-1-x: (LinkLayout.srcX(nodes[link.src])+5 + 100) * zoom;
-            control-1-y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5) * zoom; 
+            control-1-x: (LinkLayout.srcX(nodes[link.src])+5 + 100 + offset-x) * zoom;
+            control-1-y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5 + offset-y) * zoom; 
 
-            control-2-x: (LinkLayout.dstX(nodes[link.dst])+5 - 100) * zoom;
-            control-2-y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5) * zoom; 
+            control-2-x: (LinkLayout.dstX(nodes[link.dst])+5 - 100 + offset-x) * zoom;
+            control-2-y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5 + offset-y) * zoom; 
 
-            x: (LinkLayout.dstX(nodes[link.dst])+5) * zoom;
-            y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5) * zoom; 
+            x: (LinkLayout.dstX(nodes[link.dst])+5 + offset-x) * zoom;
+            y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5 + offset-y) * zoom; 
         }
     }
 }
@@ -67,9 +69,11 @@ export component LinkSlots inherits Rectangle {
     in property <LinkData> link;
     in property <[NodeData]> nodes;
     in property <float> zoom;
+    in property <float> offset-x;
+    in property <float> offset-y;
     Rectangle {
-        x: (LinkLayout.srcX(nodes[link.src])*1px) * zoom;
-        y: (LinkLayout.srcY(nodes[link.src], link.src_slot)*1px) * zoom;
+        x: (LinkLayout.srcX(nodes[link.src]) + offset-x)*1px * zoom;
+        y: (LinkLayout.srcY(nodes[link.src], link.src_slot) + offset-y)*1px * zoom;
         width: 10px * zoom;
         height: 10px * zoom;
         border-bottom-left-radius: 5px * zoom;
@@ -77,8 +81,8 @@ export component LinkSlots inherits Rectangle {
         background: LinkLayout.colorFromstring(link.ty);
     }
     Rectangle {
-        x: LinkLayout.dstX(nodes[link.dst])*1px * zoom;
-        y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)*1px * zoom;
+        x: (LinkLayout.dstX(nodes[link.dst]) + offset-x)*1px * zoom;
+        y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot) + offset-y)*1px * zoom;
         width: 10px * zoom;
         height: 10px * zoom;
         border-bottom-right-radius: 5px * zoom;

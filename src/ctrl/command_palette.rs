@@ -14,14 +14,8 @@ impl Controller for CommandPalette {
         setup_command_palette_logic(ui, tx);
         refresh(&model, ui);
     }
-    fn notify(ui: &View, model: &Model, evt: &Event) {
-        use Event::*;
-        match evt {
-            Save | SaveAs | AddNode(..) | SetNodePosition(..) | RemoveLink(..) | AddLink(..) => {}
-            OpenFile | SelectTab(..) | CloseTab(..) | NewTab | SetCommandSearch(..) => {
-                refresh(model, ui);
-            }
-        }
+    fn notify(ui: &View, model: &Model, _evt: &Event) {
+        refresh(model, ui);
     }
 }
 

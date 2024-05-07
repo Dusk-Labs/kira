@@ -1,6 +1,6 @@
-use self::{command_palette::CommandPalette, menu::Menu, node_view::NodeView, tabs::Tabs};
+use self::{command_palette::CommandPalette, graph::Graph, menu::Menu, tabs::Tabs};
 use crate::{
-    model::{Graph, Link, LinkType, Model, Node, NodeType},
+    model::{self, Link, LinkType, Model, Node, NodeType},
     ui::View,
     utils::{Aro, Arw},
 };
@@ -12,8 +12,8 @@ use std::{
 };
 
 mod command_palette;
+mod graph;
 mod menu;
-mod node_view;
 mod tabs;
 
 #[derive(Debug)]
@@ -26,6 +26,8 @@ pub enum Event {
     CloseTab(usize),
     NewTab,
     SetCommandSearch(String),
+    SetZoom(f32),
+    SetOffset(f32, f32),
     Save,
     SaveAs,
     OpenFile,
@@ -52,7 +54,7 @@ impl Mediator {
 
         Menu::setup(ro_model.clone(), ui, tx.clone());
         Tabs::setup(ro_model.clone(), ui, tx.clone());
-        NodeView::setup(ro_model.clone(), ui, tx.clone());
+        Graph::setup(ro_model.clone(), ui, tx.clone());
         CommandPalette::setup(ro_model.clone(), ui, tx.clone());
 
         Self { rx, model }
@@ -87,44 +89,44 @@ impl Mediator {
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
                         project.graph_mut().set_node_position(node_idx, x, y);
                     }
-                    notify!(NodeView);
+                    notify!(Graph);
                 }
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
                         project.graph_mut().add_node(ty.clone());
                     }
-                    notify!(NodeView);
+                    notify!(Graph);
                 }
                 AddLink(ref lnk) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
                         project.graph_mut().add_link(lnk.clone());
                     }
-                    notify!(NodeView);
+                    notify!(Graph);
                 }
                 RemoveLink(i) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
                         project.graph_mut().remove_link(i);
                     }
-                    notify!(NodeView);
+                    notify!(Graph);
                 }
                 SelectTab(i) => {
                     let mut model = self.model.write();
                     model.tabs_mut().select_tab(i);
-                    notify!(NodeView, Tabs, CommandPalette);
+                    notify!(Graph, Tabs, CommandPalette);
                 }
                 NewTab => {
                     let mut model = self.model.write();
                     model.tabs_mut().new_tab();
                     populate_available_nodes(&mut model);
-                    notify!(NodeView, Tabs, CommandPalette);
+                    notify!(Graph, Tabs, CommandPalette);
                 }
                 CloseTab(i) => {
                     let mut model = self.model.write();
                     model.tabs_mut().close_tab(i);
-                    notify!(NodeView, Tabs, CommandPalette);
+                    notify!(Graph, Tabs, CommandPalette);
                 }
                 Save => {
                     let mut model = self.model.write();
@@ -155,11 +157,26 @@ impl Mediator {
                         let graph = read_graph(&path);
                         model.tabs_mut().new_tab();
                         let selected = model.tabs_mut().selected_project_mut().unwrap();
+                        dbg!(&graph);
                         *selected.graph_mut() = graph;
                         selected.set_file_path(path.clone());
                         populate_available_nodes(&mut model);
                     }
-                    notify!(NodeView, Tabs, CommandPalette);
+                    notify!(Graph, Tabs, CommandPalette);
+                }
+                SetZoom(zoom) => {
+                    let mut model = self.model.write();
+                    if let Some(selected) = model.tabs_mut().selected_project_mut() {
+                        selected.graph_mut().set_zoom(zoom);
+                    }
+                    notify!(Graph);
+                }
+                SetOffset(x, y) => {
+                    let mut model = self.model.write();
+                    if let Some(selected) = model.tabs_mut().selected_project_mut() {
+                        selected.graph_mut().set_offset((x, y));
+                    }
+                    notify!(Graph);
                 }
             }
         }
@@ -186,13 +203,13 @@ fn save_dialog() -> Option<String> {
         .and_then(|pb| pb.to_str().map(|s| s.to_owned()))
 }
 
-fn save_graph(path: &str, graph: &Graph) {
+fn save_graph(path: &str, graph: &model::Graph) {
     // TODO: better error handling
     let f = File::create(path).unwrap();
     serde_json::to_writer(f, graph).unwrap();
 }
 
-fn read_graph(path: &str) -> Graph {
+fn read_graph(path: &str) -> model::Graph {
     // TODO: better error handling
     let f = File::open(path).unwrap();
     serde_json::from_reader(f).unwrap()
