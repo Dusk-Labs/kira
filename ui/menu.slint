@@ -1,7 +1,5 @@
 import { CheckBox } from "std-widgets.slint";
 
-export global MenuLogic { }
-
 component MenuPopupItem inherits Rectangle {
     in property <string> name;
     callback clicked();
@@ -16,7 +14,7 @@ component MenuPopupItem inherits Rectangle {
         padding-top: 5px;
         txt := Text {
             horizontal-alignment: TextHorizontalAlignment.left;
-            font-size: 8pt;
+            font-size: 10pt;
             color: white;
             text: name;
         }
@@ -29,22 +27,23 @@ component MenuPopupItem inherits Rectangle {
 component TopLevelMenu inherits Rectangle {
     in property <string> name;
 
-    preferred-width: file-text.preferred-width + 20px;
+    preferred-width: txt.preferred-width + 20px;
+    preferred-height: txt.preferred-height + 10px;
     padding-left: 1px;
 
-    background: file_ta.has-hover ? #2f2f2f: #010101;
-    file_text := Text {
+    background: ta.has-hover ? #2f2f2f: #010101;
+    txt := Text {
         horizontal-alignment: TextHorizontalAlignment.left;
-        font-size: 8pt;
+        font-size: 10pt;
         color: white;
         text: name;
     }
-    file_ta := TouchArea {
+    ta := TouchArea {
         clicked => {
-            file_popup.show();
+            popup.show();
         }
     }
-    file_popup := PopupWindow {
+    popup := PopupWindow {
         x: 0px;
         y: parent.height;
         VerticalLayout { 
@@ -53,25 +52,37 @@ component TopLevelMenu inherits Rectangle {
     }
 }
 
+export global MenuLogic { 
+    callback open_file();
+    callback save();
+    callback save_as();
+}
+
 export component Menu inherits Rectangle {
     preferred-width: 100%;
-    height: 5mm;
     background: #010101;
     HorizontalLayout {
         alignment: LayoutAlignment.start;
         TopLevelMenu {
             name: "File";
             MenuPopupItem  {
-                name: "Lorem";
-                clicked => { debug ("Lorem Ipsup"); }
+                name: "Open File...";
+                clicked => { MenuLogic.open_file(); }
             }
-            MenuPopupItem  { name: "Ipsum"; }
-            MenuPopupItem  { name: "Quit"; }
+            MenuPopupItem  {
+                name: "Save";
+                clicked => { MenuLogic.save(); }
+            }
+            MenuPopupItem  {
+                name: "Save as...";
+                clicked => { MenuLogic.save_as(); }
+            }
+            // MenuPopupItem  { name: "Exit"; }
         }
-        TopLevelMenu {
-            name: "Edit";
-            MenuPopupItem  { name: "Lorem"; }
-            MenuPopupItem  { name: "Ipsum"; }
-        }
+        // TopLevelMenu {
+        //     name: "Edit";
+        //     MenuPopupItem  { name: "Lorem"; }
+        //     MenuPopupItem  { name: "Ipsum"; }
+        // }
     }
 }

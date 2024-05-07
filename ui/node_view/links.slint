@@ -38,7 +38,7 @@ export component Link inherits Rectangle {
     in property <[NodeData]> nodes;
     in property <float> viewbox-height;
     in property <float> viewbox-width;
-
+    in property <float> zoom;
 
     Path {
         stroke: LinkLayout.colorFromstring(link.ty);
@@ -46,15 +46,19 @@ export component Link inherits Rectangle {
         viewbox-width: viewbox-width;
         stroke-width: 3px;
 
-        MoveTo { x: LinkLayout.srcX(nodes[link.src])+5; y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; }
+        MoveTo {
+            x: (LinkLayout.srcX(nodes[link.src])+5) * zoom;
+            y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5) * zoom;
+        }
         CubicTo { 
-            control-1-x: LinkLayout.srcX(nodes[link.src])+5 + 100;
-            control-1-y: LinkLayout.srcY(nodes[link.src], link.src_slot)+5; 
+            control-1-x: (LinkLayout.srcX(nodes[link.src])+5 + 100) * zoom;
+            control-1-y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5) * zoom; 
 
-            control-2-x: LinkLayout.dstX(nodes[link.dst])+5 - 100;
-            control-2-y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
-            x: LinkLayout.dstX(nodes[link.dst])+5;
-            y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5; 
+            control-2-x: (LinkLayout.dstX(nodes[link.dst])+5 - 100) * zoom;
+            control-2-y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5) * zoom; 
+
+            x: (LinkLayout.dstX(nodes[link.dst])+5) * zoom;
+            y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot)+5) * zoom; 
         }
     }
 }
@@ -62,22 +66,23 @@ export component Link inherits Rectangle {
 export component LinkSlots inherits Rectangle {
     in property <LinkData> link;
     in property <[NodeData]> nodes;
+    in property <float> zoom;
     Rectangle {
-        x: LinkLayout.srcX(nodes[link.src])*1px;
-        y: LinkLayout.srcY(nodes[link.src], link.src_slot)*1px;
-        width: 10px;
-        height: 10px;
-        border-bottom-left-radius: 5px;
-        border-top-left-radius: 5px;
+        x: (LinkLayout.srcX(nodes[link.src])*1px) * zoom;
+        y: (LinkLayout.srcY(nodes[link.src], link.src_slot)*1px) * zoom;
+        width: 10px * zoom;
+        height: 10px * zoom;
+        border-bottom-left-radius: 5px * zoom;
+        border-top-left-radius: 5px * zoom;
         background: LinkLayout.colorFromstring(link.ty);
     }
     Rectangle {
-        x: LinkLayout.dstX(nodes[link.dst])*1px;
-        y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)*1px;
-        width: 10px;
-        height: 10px;
-        border-bottom-right-radius: 5px;
-        border-top-right-radius: 5px;
+        x: LinkLayout.dstX(nodes[link.dst])*1px * zoom;
+        y: LinkLayout.dstY(nodes[link.dst], link.dst_slot)*1px * zoom;
+        width: 10px * zoom;
+        height: 10px * zoom;
+        border-bottom-right-radius: 5px * zoom;
+        border-top-right-radius: 5px * zoom;
         background: LinkLayout.colorFromstring(link.ty);
     }
     

@@ -30,6 +30,7 @@ fn refresh(ui: &View, model: &Model) {
     if let Some(project) = model.tabs().selected_project() {
         ui.set_nodes(VecModel::from_slice(
             &project
+                .graph()
                 .get_nodes()
                 .iter()
                 .map(|ni| {

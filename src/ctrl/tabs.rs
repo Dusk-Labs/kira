@@ -4,7 +4,7 @@ use crate::{
     ui::{TabLogic, View},
 };
 use slint::{ComponentHandle, SharedString, VecModel};
-use std::sync::mpsc::Sender;
+use std::{path::Path, sync::mpsc::Sender};
 
 pub struct Tabs;
 
@@ -35,7 +35,7 @@ impl Controller for Tabs {
     fn notify(ui: &View, model: &Model, evt: &Event) {
         use Event::*;
         match evt {
-            SelectTab(..) | NewTab | CloseTab(..) => {
+            Save | SaveAs | OpenFile | SelectTab(..) | NewTab | CloseTab(..) => {
                 refresh(model, ui);
             }
             SetCommandSearch(..) | SetNodePosition(..) | AddNode(..) | RemoveLink(..)
@@ -45,12 +45,21 @@ impl Controller for Tabs {
 }
 
 fn refresh(model: &Model, ui: &View) {
-    let mut dummy_names = vec![];
-    for i in 0..model.tabs().len() {
-        dummy_names.push(SharedString::from(format!("Tab {i}")));
-    }
+    let tab_titles = model
+        .tabs()
+        .tab_titles()
+        .iter()
+        .map(|path| {
+            Path::new(path)
+                .file_name()
+                .unwrap()
+                .to_str()
+                .unwrap()
+                .into()
+        })
+        .collect::<Vec<SharedString>>();
 
-    ui.set_tab_names(VecModel::from_slice(&dummy_names));
+    ui.set_tab_names(VecModel::from_slice(&tab_titles));
     ui.set_selected_tab({
         let selected = model.tabs().selected_tab();
         selected

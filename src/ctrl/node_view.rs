@@ -14,12 +14,14 @@ impl Controller for NodeView {
         Nodes::setup(model.clone(), ui, tx.clone());
         Links::setup(model.clone(), ui, tx.clone());
         Floating::setup(model.clone(), ui, tx.clone());
+
+        ui.set_zoom(2.);
     }
 
     fn notify(ui: &View, model: &Model, evt: &Event) {
         use Event::*;
         match evt {
-            SetNodePosition(..) | CloseTab(..) | SelectTab(..) | NewTab => {
+            OpenFile | SetNodePosition(..) | CloseTab(..) | SelectTab(..) | NewTab => {
                 Nodes::notify(ui, model, evt);
                 Links::notify(ui, model, evt);
             }
@@ -29,7 +31,7 @@ impl Controller for NodeView {
             AddNode(..) => {
                 Nodes::notify(ui, model, evt);
             }
-            SetCommandSearch(..) => {}
+            Save | SaveAs | SetCommandSearch(..) => {}
         }
     }
 }

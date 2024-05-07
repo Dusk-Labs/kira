@@ -24,10 +24,9 @@ export global MoveAreaLogic {
 export component Floating inherits Rectangle {
     in property <FloatingLinkData> floating;
     in property <[NodeData]> nodes;
-    in property <float> mouse-x;
-    in property <float> mouse-y;
     in property <float> viewbox-height;
     in property <float> viewbox-width;
+    in property <float> zoom;
     Path {
         stroke: LinkLayout.colorFromstring(floating.ty);
         viewbox-height: viewbox-height;
@@ -36,19 +35,19 @@ export component Floating inherits Rectangle {
 
         MoveTo {
             x: floating.floating_state == FloatingState.src_attached
-                ? LinkLayout.srcX(nodes[floating.node])+5
-                : LinkLayout.dstX(nodes[floating.node])+5;
+                ? (LinkLayout.srcX(nodes[floating.node])+5) * zoom
+                : (LinkLayout.dstX(nodes[floating.node])+5) * zoom;
             y: floating.floating_state == FloatingState.src_attached
-                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
-                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+                ? (LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5) * zoom
+                : (LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5) * zoom;
         }
         CubicTo { 
             control-1-x: floating.floating_state == FloatingState.src_attached
-                ? LinkLayout.srcX(nodes[floating.node])+5 + 100
-                : LinkLayout.dstX(nodes[floating.node])+5 - 100;
+                ? (LinkLayout.srcX(nodes[floating.node])+5 + 100) * zoom
+                : (LinkLayout.dstX(nodes[floating.node])+5 - 100) * zoom;
             control-1-y: floating.floating_state == FloatingState.src_attached
-                ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5
-                : LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5;
+                ? (LinkLayout.srcY(nodes[floating.node], floating.node_slot)+5) * zoom
+                : (LinkLayout.dstY(nodes[floating.node], floating.node_slot)+5) * zoom;
             control-2-x: floating.x/1px;
             control-2-y: floating.y/1px; 
             x: floating.x/1px;
@@ -60,35 +59,23 @@ export component Floating inherits Rectangle {
 export component FloatingSlots inherits Rectangle {
     in property <FloatingLinkData> floating;
     in property <[NodeData]> nodes;
-    in property <float> mouse-x;
-    in property <float> mouse-y;
     in property <float> viewbox-height;
     in property <float> viewbox-width;
+    in property <float> zoom;
     Rectangle {
         x: floating.floating_state == FloatingState.src_attached
-            ? LinkLayout.srcX(nodes[floating.node])*1px
-            : LinkLayout.dstX(nodes[floating.node])*1px;
+            ? LinkLayout.srcX(nodes[floating.node])*1px * zoom
+            : LinkLayout.dstX(nodes[floating.node])*1px * zoom;
         y: floating.floating_state == FloatingState.src_attached
-            ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)*1px
-            : LinkLayout.dstY(nodes[floating.node], floating.node_slot)*1px;
-        width: 10px;
-        height: 10px;
-        border-radius: 5px;
-        border-bottom-left-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
-        border-top-left-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
-        border-bottom-right-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
-        border-top-right-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
+            ? LinkLayout.srcY(nodes[floating.node], floating.node_slot)*1px * zoom
+            : LinkLayout.dstY(nodes[floating.node], floating.node_slot)*1px * zoom;
+        width: 10px * zoom;
+        height: 10px * zoom;
+        border-radius: 5px * zoom;
+        border-bottom-left-radius: (floating.floating_state == FloatingState.src_attached ? 5px : 0px) * zoom;
+        border-top-left-radius: (floating.floating_state == FloatingState.src_attached ? 5px : 0px) * zoom;
+        border-bottom-right-radius: (floating.floating_state == FloatingState.src_attached ? 0px : 5px) * zoom;
+        border-top-right-radius: (floating.floating_state == FloatingState.src_attached ? 0px : 5px) * zoom;
         background: LinkLayout.colorFromstring(floating.ty);
     }
-    // Rectangle {
-    //     x: floating.x - 5px;
-    //     y: floating.y - 5px;
-    //     width: 10px;
-    //     height: 10px;
-    //     border-bottom-left-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
-    //     border-top-left-radius: floating.floating_state == FloatingState.src_attached ? 0px : 5px;
-    //     border-bottom-right-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
-    //     border-top-right-radius: floating.floating_state == FloatingState.src_attached ? 5px : 0px;
-    //     background: LinkLayout.colorFromstring(floating.ty);
-    // }
 }

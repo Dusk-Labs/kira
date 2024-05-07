@@ -28,7 +28,7 @@ component Input inherits Rectangle {
 
         input := TextInput {
             color: white;
-            font-size: 20px;
+            font-size: 14pt;
             single-line: true;
 
             edited() => {
@@ -60,12 +60,12 @@ component ResultItemArrow inherits Rectangle {
             Text {
                 color: text-color;
                 text: "Add to Workflow";
-                font-weight: 800;
+                font-size: 12pt;
             }
         }
 
         Image {
-            width: 10pt; 
+            width: 12pt; 
             source: @image-url("../assets/fa-arrow-right-solid.svg");
             image-fit: contain;
             colorize: icon-color;
@@ -96,6 +96,7 @@ component ResultItem inherits Rectangle {
             VerticalLayout {
                 alignment: center;
                 label := Text {
+                    font-size: 12pt;
                     color: white;
                     text: item.name + " - " + item.category;
                 }

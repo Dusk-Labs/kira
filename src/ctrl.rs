@@ -1,33 +1,34 @@
-use self::{command_palette::CommandPalette, node_view::NodeView, tabs::Tabs};
+use self::{command_palette::CommandPalette, menu::Menu, node_view::NodeView, tabs::Tabs};
 use crate::{
-    model::{
-        self,
-        project::{self, Node, NodeType},
-        Model,
-    },
+    model::{Graph, Link, LinkType, Model, Node, NodeType},
     ui::View,
     utils::{Aro, Arw},
 };
 use slint::Weak;
 use std::{
     collections::HashMap,
+    fs::File,
     sync::mpsc::{Receiver, Sender},
 };
 
 mod command_palette;
+mod menu;
 mod node_view;
 mod tabs;
 
 #[derive(Debug)]
 pub enum Event {
     SetNodePosition(usize, f32, f32),
-    AddNode(model::project::NodeType),
-    AddLink(model::project::Link),
+    AddNode(NodeType),
+    AddLink(Link),
     RemoveLink(usize),
     SelectTab(usize),
     CloseTab(usize),
     NewTab,
     SetCommandSearch(String),
+    Save,
+    SaveAs,
+    OpenFile,
 }
 
 trait Controller {
@@ -49,6 +50,7 @@ impl Mediator {
         let model = Arw::new(model);
         let ro_model = Aro::from(model.clone());
 
+        Menu::setup(ro_model.clone(), ui, tx.clone());
         Tabs::setup(ro_model.clone(), ui, tx.clone());
         NodeView::setup(ro_model.clone(), ui, tx.clone());
         CommandPalette::setup(ro_model.clone(), ui, tx.clone());
@@ -83,28 +85,28 @@ impl Mediator {
                 SetNodePosition(node_idx, x, y) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.set_node_position(node_idx, x, y);
+                        project.graph_mut().set_node_position(node_idx, x, y);
                     }
                     notify!(NodeView);
                 }
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.add_node(ty.clone());
+                        project.graph_mut().add_node(ty.clone());
                     }
                     notify!(NodeView);
                 }
                 AddLink(ref lnk) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.add_link(lnk.clone());
+                        project.graph_mut().add_link(lnk.clone());
                     }
                     notify!(NodeView);
                 }
                 RemoveLink(i) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.remove_link(i);
+                        project.graph_mut().remove_link(i);
                     }
                     notify!(NodeView);
                 }
@@ -124,9 +126,76 @@ impl Mediator {
                     model.tabs_mut().close_tab(i);
                     notify!(NodeView, Tabs, CommandPalette);
                 }
+                Save => {
+                    let mut model = self.model.write();
+                    if let Some(selected) = model.tabs_mut().selected_project_mut() {
+                        if let Some(path) = selected.file_path() {
+                            save_graph(path, selected.graph());
+                        } else if let Some(path) = save_dialog() {
+                            selected.set_file_path(path.clone());
+                            save_graph(&path, selected.graph());
+                        }
+                    }
+                    notify!(Tabs);
+                }
+                SaveAs => {
+                    let mut model = self.model.write();
+                    if let Some(selected) = model.tabs_mut().selected_project_mut() {
+                        if let Some(path) = save_dialog() {
+                            selected.set_file_path(path.clone());
+                            save_graph(&path, selected.graph());
+                        }
+                    }
+                    notify!(Tabs);
+                }
+                OpenFile => {
+                    let mut model = self.model.write();
+                    if let Some(path) = open_dialog() {
+                        // TODO: refactor project initialization into model
+                        let graph = read_graph(&path);
+                        model.tabs_mut().new_tab();
+                        let selected = model.tabs_mut().selected_project_mut().unwrap();
+                        *selected.graph_mut() = graph;
+                        selected.set_file_path(path.clone());
+                        populate_available_nodes(&mut model);
+                    }
+                    notify!(NodeView, Tabs, CommandPalette);
+                }
             }
         }
     }
+}
+
+fn open_dialog() -> Option<String> {
+    // TODO: better error handling
+    native_dialog::FileDialog::new()
+        .add_filter("Kira Graph File", &["kira"])
+        .show_open_single_file()
+        .ok()
+        .flatten()
+        .and_then(|pb| pb.to_str().map(|s| s.to_owned()))
+}
+
+fn save_dialog() -> Option<String> {
+    // TODO: better error handling
+    native_dialog::FileDialog::new()
+        .add_filter("Kira Graph File", &["kira"])
+        .show_save_single_file()
+        .ok()
+        .flatten()
+        .and_then(|pb| pb.to_str().map(|s| s.to_owned()))
+}
+
+fn save_graph(path: &str, graph: &Graph) {
+    // TODO: better error handling
+    let f = File::create(path).unwrap();
+    serde_json::to_writer(f, graph).unwrap();
+}
+
+fn read_graph(path: &str) -> Graph {
+    // TODO: better error handling
+    let f = File::open(path).unwrap();
+    serde_json::from_reader(f).unwrap()
 }
 
 fn populate_available_nodes(model: &mut Model) {
@@ -180,18 +249,18 @@ fn populate_available_nodes(model: &mut Model) {
             hm.into_iter()
                 .map(|(k, v)| {
                     (
-                        project::NodeType(k),
-                        project::Node {
+                        NodeType(k),
+                        Node {
                             inputs: v
                                 .input
                                 .into_iter()
-                                .map(|(lbl, ty)| (lbl, project::LinkType(ty)))
+                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
                                 .collect(),
                             outputs: v
                                 .output_name
                                 .into_iter()
                                 .zip(v.output)
-                                .map(|(lbl, ty)| (lbl, project::LinkType(ty)))
+                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
                                 .collect(),
                             name: v.display_name,
                             description: v.description,

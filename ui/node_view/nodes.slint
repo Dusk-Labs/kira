@@ -10,17 +10,18 @@ export component Node inherits Rectangle {
     in property <int> node_idx;
     in-out property <[NodeData]> nodes;
     in property <FloatingLinkData> floating;
-    x: n.x;
-    y: n.y - 10px;
+    in property <float> zoom;
+    x: n.x * zoom;
+    y: (n.y - 10px) * zoom;
     background: #0f0f0f;
-    width: n.width;
+    width: n.width * zoom;
     height: l.preferred-height;
-    border-radius: 3px;
+    border-radius: 3px * zoom;
     TouchArea {
         moved => {
             if (self.pressed) {
-                n.x += self.mouse-x - self.pressed-x;
-                n.y += self.mouse-y - self.pressed-y;
+                n.x += (self.mouse-x - self.pressed-x) / zoom;
+                n.y += (self.mouse-y - self.pressed-y) / zoom;
                 nodes[node_idx] = n;
             }
         }
@@ -38,19 +39,19 @@ export component Node inherits Rectangle {
     }
 
     l := VerticalLayout {
-        padding-top: 10px;
-        padding-bottom: 5px;
+        padding-top: 10px * zoom;
+        padding-bottom: 5px * zoom;
         HorizontalLayout {
             VerticalLayout {
-                spacing: 5px;
+                spacing: 5px * zoom;
                 for input[input_idx] in n.inputs: HorizontalLayout {
-                    spacing: 2px;
+                    spacing: 2px * zoom;
                     Rectangle {
                         // x: n.x - 10px;
-                        width: 10px;
-                        height: 10px;
-                        border-bottom-right-radius: 5px;
-                        border-top-right-radius: 5px;
+                        width: 10px * zoom;
+                        height: 10px * zoom;
+                        border-bottom-right-radius: 5px * zoom;
+                        border-top-right-radius: 5px * zoom;
                         background: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty) : LinkLayout.colorFromstring(input.ty).darker(1);
                         input_ta := TouchArea {
                             clicked => {
@@ -64,30 +65,30 @@ export component Node inherits Rectangle {
                     }
                     Text {
                         color: white;
-                        height: 10px;
+                        height: 10px * zoom;
                         text: input.name;
                         horizontal-alignment: TextHorizontalAlignment.left;
-                        font-size: 6px;
+                        font-size: 6pt * zoom;
                     }
                 }
             }
             VerticalLayout {
-                spacing: 5px;
+                spacing: 5px * zoom;
                 for output[output_idx] in n.outputs: HorizontalLayout {
-                    spacing: 2px;
+                    spacing: 2px * zoom;
                     Text {
                         color: white;
-                        height: 10px;
+                        height: 10px * zoom;
                         text: output.name;
                         horizontal-alignment: TextHorizontalAlignment.right;
-                        font-size: 6px;
+                        font-size: 6pt * zoom;
                     }
                     Rectangle {
                         // x: n.x + n.width;
-                        width: 10px;
-                        height: 10px;
-                        border-bottom-left-radius: 5px;
-                        border-top-left-radius: 5px;
+                        width: 10px * zoom;
+                        height: 10px * zoom;
+                        border-bottom-left-radius: 5px * zoom;
+                        border-top-left-radius: 5px * zoom;
                         background: output_ta.has-hover ? LinkLayout.colorFromstring(output.ty) : LinkLayout.colorFromstring(output.ty).darker(1);
                         output_ta := TouchArea {
                             clicked => {
@@ -107,8 +108,9 @@ export component Node inherits Rectangle {
                 color: white;
                 text: n.text;
                 wrap: TextWrap.word-wrap;
+                font-size: 14pt * zoom;
             }
-            padding: 15px;
+            padding: 15px * zoom;
         }
     }
     

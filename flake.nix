@@ -15,8 +15,10 @@
           xorg.libXcursor 
           libxkbcommon
           fontconfig
-          # pkgs.qt5.full
           libGL
+
+          qt5.full
+          kdialog
 
           openssl
           perl

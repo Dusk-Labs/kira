@@ -28,7 +28,7 @@ impl Controller for Links {
             | AddLink(..) => {
                 refresh(ui, model);
             }
-            AddNode(..) | SetCommandSearch(..) => {}
+            Save | SaveAs | OpenFile | AddNode(..) | SetCommandSearch(..) => {}
         }
     }
 }
@@ -37,6 +37,7 @@ fn refresh(ui: &View, model: &Model) {
     if let Some(project) = model.tabs().selected_project() {
         ui.set_links(VecModel::from_slice(
             &project
+                .graph()
                 .get_links()
                 .iter()
                 .map(|l| LinkData {
@@ -61,11 +62,12 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
             let model = model.read();
             if let Some(project) = model.tabs().selected_project() {
                 if let Some(slot_ty) = project
+                    .graph()
                     .get_node(node_idx as usize)
                     .and_then(|ni| project.get_available_node(&ni.ty))
                     .map(|n| n.outputs[slot_idx as usize].1.clone())
                 {
-                    for (i, link) in project.get_links().iter().enumerate() {
+                    for (i, link) in project.graph().get_links().iter().enumerate() {
                         if link.src_node == node_idx as usize && link.src_slot == slot_idx as usize
                         {
                             ui.set_floating(ui::FloatingLinkData {
@@ -102,11 +104,12 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
             let model = model.read();
             if let Some(project) = model.tabs().selected_project() {
                 if let Some(slot_ty) = project
+                    .graph()
                     .get_node(node_idx as usize)
                     .and_then(|ni| project.get_available_node(&ni.ty))
                     .map(|n| n.inputs[slot_idx as usize].1.clone())
                 {
-                    for (i, link) in project.get_links().iter().enumerate() {
+                    for (i, link) in project.graph().get_links().iter().enumerate() {
                         if link.dst_node == node_idx as usize && link.dst_slot == slot_idx as usize
                         {
                             // let link = links.remove(i);
@@ -144,6 +147,7 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
             let model = model.read();
             if let Some(project) = model.tabs().selected_project() {
                 if let Some(slot_ty) = project
+                    .graph()
                     .get_node(node_idx as usize)
                     .and_then(|ni| project.get_available_node(&ni.ty))
                     .map(|n| n.inputs[slot_idx as usize].1.clone())
@@ -152,7 +156,7 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
                     if floating.ty.as_str() == slot_ty.0
                         && floating.floating_state == ui::FloatingState::SrcAttached
                     {
-                        tx.send(Event::AddLink(model::project::Link {
+                        tx.send(Event::AddLink(model::Link {
                             dst_node: node_idx as usize,
                             dst_slot: slot_idx as usize,
                             src_node: floating.node as usize,
@@ -177,6 +181,7 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
             let model = model.read();
             if let Some(project) = model.tabs().selected_project() {
                 if let Some(slot_ty) = project
+                    .graph()
                     .get_node(node_idx as usize)
                     .and_then(|ni| project.get_available_node(&ni.ty))
                     .map(|n| n.outputs[slot_idx as usize].1.clone())
@@ -185,7 +190,7 @@ fn setup_link_logic(ui: &View, model: Aro<Model>, tx: Sender<Event>) {
                     if floating.ty.as_str() == slot_ty.0
                         && floating.floating_state == ui::FloatingState::DstAttached
                     {
-                        tx.send(Event::AddLink(model::project::Link {
+                        tx.send(Event::AddLink(model::Link {
                             src_node: node_idx as usize,
                             src_slot: slot_idx as usize,
                             dst_node: floating.node as usize,

@@ -2,7 +2,7 @@ import { Graph, NodeData, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, 
 import { SearchItem, Palette, PaletteSearch } from "command_palette.slint";
 import { Timeline } from "timeline.slint";
 import { Tabs, TabLogic } from "tabs.slint";
-import { Menu } from "menu.slint";
+import { Menu, MenuLogic } from "menu.slint";
 
 export {
     PointerEventKind,
@@ -10,7 +10,8 @@ export {
     MoveAreaLogic,
     LinkLogic,
     PaletteSearch,
-    TabLogic
+    TabLogic,
+    MenuLogic
 }
 
 export component View inherits Window {
@@ -20,6 +21,7 @@ export component View inherits Window {
     in property <int> selected_tab;
     in property <[string]> tab_names;
     in property <[SearchItem]> command_palette_results;
+    in property <float> zoom;
 
     preferred-height: 20cm;
     preferred-width: 30cm;
@@ -48,6 +50,7 @@ export component View inherits Window {
                 nodes: nodes;
                 links: links;
                 floating: floating;
+                zoom: zoom;
             }
             timeline := Timeline {
                 visible: any_tab_selected();

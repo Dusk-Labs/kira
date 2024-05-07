@@ -18,17 +18,30 @@ export component Graph inherits Rectangle {
     background: #1f1f1f;
     preferred-height: 100%;
     preferred-width: 100%;
+    in-out property <float> zoom;
     in property <[NodeData]> nodes;
     in property <[LinkData]> links;
     in-out property <FloatingLinkData> floating;
 
     // catch mouse events in the background
-     TouchArea {
+    TouchArea {
         clicked => {
             if floating.floating_state != FloatingState.none {
                  MoveAreaLogic.reset_floating_state();
             }
         }
+    }
+    Flickable {
+        interactive: false;
+        viewport-height: 10000000cm;
+        viewport-width: self.width;
+        viewport-y: - (zoom - 1) * 20cm;
+        viewport-x: 0;
+        flicked => { 
+            root.zoom = 1 - self.viewport-y/20cm;
+            // debug(root.zoom);
+        }
+        Rectangle {}
     }
 
     if floating.floating_state != FloatingState.none: Floating {
@@ -36,6 +49,7 @@ export component Graph inherits Rectangle {
         nodes: nodes;
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
+        zoom: zoom;
     }
 
     for l[idx] in links : Link {
@@ -43,6 +57,7 @@ export component Graph inherits Rectangle {
         nodes: nodes;
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
+        zoom: zoom;
     }
 
     for n[node_idx] in nodes : Node {
@@ -50,6 +65,7 @@ export component Graph inherits Rectangle {
         node_idx: node_idx;
         nodes: nodes;
         floating: floating;
+        zoom: zoom;
     }
 
     if floating.floating_state != FloatingState.none: FloatingSlots {
@@ -57,11 +73,13 @@ export component Graph inherits Rectangle {
         nodes: nodes;
         viewbox-height: self.height /1px;
         viewbox-width: self.width /1px;
+        zoom: zoom;
     }
 
     for l[idx] in links : LinkSlots {
         link: l;
         nodes: nodes;
+        zoom: zoom;
     }
 
     if floating.floating_state != FloatingState.none: MoveArea {
