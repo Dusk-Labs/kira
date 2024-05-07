@@ -72,9 +72,9 @@ impl Mediator {
                     .unwrap()
                 };
             }
-            use Event::*;
-
             println!("{:?}", &evt);
+
+            use Event::*;
             match evt {
                 SetCommandSearch(ref query) => {
                     let mut model = self.model.write();

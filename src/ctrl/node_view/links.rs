@@ -21,15 +21,8 @@ impl Controller for Links {
         refresh(ui, &model);
     }
 
-    fn notify(ui: &View, model: &Model, evt: &Event) {
-        use Event::*;
-        match evt {
-            SetNodePosition(..) | CloseTab(..) | SelectTab(..) | NewTab | RemoveLink(..)
-            | AddLink(..) => {
-                refresh(ui, model);
-            }
-            Save | SaveAs | OpenFile | AddNode(..) | SetCommandSearch(..) => {}
-        }
+    fn notify(ui: &View, model: &Model, _evt: &Event) {
+        refresh(ui, model);
     }
 }
 
