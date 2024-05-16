@@ -190,22 +190,38 @@ impl Mediator {
 
 fn open_dialog() -> Option<String> {
     // TODO: better error handling
-    native_dialog::FileDialog::new()
-        .add_filter("Kira Graph File", &["kira"])
-        .show_open_single_file()
-        .ok()
-        .flatten()
-        .and_then(|pb| pb.to_str().map(|s| s.to_owned()))
+    let (tx, rx) = std::sync::mpsc::channel();
+    slint::invoke_from_event_loop(move || {
+        tx.send(
+            native_dialog::FileDialog::new()
+                .add_filter("Kira Graph File", &["kira"])
+                .show_open_single_file()
+                .ok()
+                .flatten()
+                .and_then(|pb| pb.to_str().map(|s| s.to_owned())),
+        )
+        .unwrap()
+    })
+    .unwrap();
+    rx.recv().unwrap()
 }
 
 fn save_dialog() -> Option<String> {
     // TODO: better error handling
-    native_dialog::FileDialog::new()
-        .add_filter("Kira Graph File", &["kira"])
-        .show_save_single_file()
-        .ok()
-        .flatten()
-        .and_then(|pb| pb.to_str().map(|s| s.to_owned()))
+    let (tx, rx) = std::sync::mpsc::channel();
+    slint::invoke_from_event_loop(move || {
+        tx.send(
+            native_dialog::FileDialog::new()
+                .add_filter("Kira Graph File", &["kira"])
+                .show_save_single_file()
+                .ok()
+                .flatten()
+                .and_then(|pb| pb.to_str().map(|s| s.to_owned())),
+        )
+        .unwrap()
+    })
+    .unwrap();
+    rx.recv().unwrap()
 }
 
 fn save_graph(path: &str, graph: &model::Graph) {

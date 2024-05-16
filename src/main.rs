@@ -13,17 +13,11 @@ use ui::View;
 fn main() -> Result<(), slint::PlatformError> {
     let model = Model::new();
 
-    let (tx, rx) = std::sync::mpsc::channel();
+    let ui = View::new()?;
+    let ctrl = Mediator::new(&ui, model);
 
-    std::thread::spawn({
-        move || {
-            let ui = View::new()?;
-            let ctrl = Mediator::new(&ui, model);
-            tx.send(ctrl).unwrap();
-            ui.run()
-        }
+    std::thread::spawn(move || {
+        ctrl.run();
     });
-    let ctrl = rx.recv().unwrap();
-    ctrl.run();
-    Ok(())
+    ui.run()
 }
