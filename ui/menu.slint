@@ -6,15 +6,15 @@ component MenuPopupItem inherits Rectangle {
 
     background: ta.has-hover ? #3f3f3f : #2f2f2f;
     preferred-width: txt.preferred-width + 20px;
-    preferred-height: txt.preferred-height + 10px;
+    preferred-height: txt.preferred-height + 5px ;
 
     HorizontalLayout {
         alignment: LayoutAlignment.start;
         padding-left: 10px;
-        padding-top: 5px;
+        padding-top: 2.5px;
         txt := Text {
             horizontal-alignment: TextHorizontalAlignment.left;
-            font-size: 10pt;
+            font-size: 8pt;
             color: white;
             text: name;
         }
@@ -28,13 +28,13 @@ component TopLevelMenu inherits Rectangle {
     in property <string> name;
 
     preferred-width: txt.preferred-width + 20px;
-    preferred-height: txt.preferred-height + 10px;
+    preferred-height: txt.preferred-height + 5px;
     padding-left: 1px;
 
     background: ta.has-hover ? #2f2f2f: #010101;
     txt := Text {
         horizontal-alignment: TextHorizontalAlignment.left;
-        font-size: 10pt;
+        font-size: 8pt;
         color: white;
         text: name;
     }

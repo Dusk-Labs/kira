@@ -17,11 +17,8 @@
           fontconfig
           libGL
 
-          qt5.full
+          # qt5.full
           kdialog
-
-          openssl
-          perl
         ];
         libPath = pkgs.lib.makeLibraryPath libs;
 

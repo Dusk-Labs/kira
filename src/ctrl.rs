@@ -4,7 +4,7 @@ use crate::{
     ui::View,
     utils::{Aro, Arw},
 };
-use slint::Weak;
+use slint::{ComponentHandle, Weak};
 use std::{
     collections::HashMap,
     fs::File,
@@ -41,6 +41,7 @@ trait Controller {
 pub struct Mediator {
     rx: Receiver<Event>,
     model: Arw<Model>,
+    ui: Weak<View>,
 }
 
 impl Mediator {
@@ -57,14 +58,18 @@ impl Mediator {
         Graph::setup(ro_model.clone(), ui, tx.clone());
         CommandPalette::setup(ro_model.clone(), ui, tx.clone());
 
-        Self { rx, model }
+        Self {
+            rx,
+            model,
+            ui: ui.as_weak(),
+        }
     }
 
-    pub fn run(self, ui: Weak<View>) {
+    pub fn run(self) {
         for evt in self.rx.iter() {
             macro_rules! notify {
                 ($($ctrl:ty),*) => {
-                    ui.upgrade_in_event_loop({
+                    self.ui.upgrade_in_event_loop({
                         let model = self.model.clone();
                         move |ui| {
                             let model = model.read();
