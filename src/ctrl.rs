@@ -292,13 +292,13 @@ fn populate_available_nodes(model: &mut Model) {
                             inputs: v
                                 .input
                                 .into_iter()
-                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
+                                .map(|(lbl, ty)| (lbl, LinkType(ty.ty())))
                                 .collect(),
                             outputs: v
                                 .output_name
                                 .into_iter()
                                 .zip(v.output)
-                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
+                                .map(|(lbl, ty)| (lbl, LinkType(ty.into())))
                                 .collect(),
                             name: v.display_name,
                             description: v.description,
@@ -309,6 +309,7 @@ fn populate_available_nodes(model: &mut Model) {
                 .collect()
         })
         .unwrap_or(dummy_nodes);
+
     if let Some(project) = model.tabs_mut().selected_project_mut() {
         project.set_available_nodes(available_nodes);
     }

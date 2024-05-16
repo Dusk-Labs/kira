@@ -1,5 +1,10 @@
-use serde::Deserialize;
-use std::{collections::HashMap, error::Error};
+pub mod node;
+
+use std::collections::HashMap;
+use std::error::Error;
+
+use node::Node;
+use node::RawNode;
 
 #[derive(Debug)]
 pub struct Backend {}
@@ -17,19 +22,17 @@ impl Backend {
 
         assert!(response.status().is_success());
 
-        Ok(response.json().expect("Failed to deserialize JSON"))
-    }
-}
+        let text = response.text().expect("API returned no body.");
+        let mut de = serde_json::Deserializer::from_str(&text);
+        let result: HashMap<String, RawNode> = match serde_path_to_error::deserialize(&mut de) {
+            Ok(x) => x,
+            Err(err) => {
+                panic!("Failed to deserialize body: {:?}", err.path().to_string());
+            }
+        };
 
-#[derive(Deserialize, Debug)]
-pub struct Node {
-    pub input: HashMap<String, String>,
-    pub output: Vec<String>,
-    pub output_is_list: Vec<bool>,
-    pub output_name: Vec<String>,
-    pub name: String,
-    pub display_name: String,
-    pub description: String,
-    pub category: String,
-    pub output_node: bool,
+        let result = result.into_iter().map(|(k, v)| (k, Node::from(v))).collect::<HashMap<_, _>>();
+
+        Ok(result)
+    }
 }
