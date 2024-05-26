@@ -2307,6 +2307,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e2db585e1d738fc771bf08a151420d3ed193d9d895a36df7f6f8a9456b911ddc"
 
 [[package]]
+name = "kira"
+version = "0.1.0"
+dependencies = [
+ "native-dialog",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "simsearch",
+ "slint",
+ "slint-build",
+]
+
+[[package]]
 name = "kurbo"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3693,19 +3706,6 @@ dependencies = [
  "spin_on",
  "thiserror",
  "toml_edit 0.22.9",
-]
-
-[[package]]
-name = "slint-graph"
-version = "0.1.0"
-dependencies = [
- "native-dialog",
- "reqwest",
- "serde",
- "serde_json",
- "simsearch",
- "slint",
- "slint-build",
 ]
 
 [[package]]

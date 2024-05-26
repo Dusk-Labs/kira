@@ -1,5 +1,5 @@
 [package]
-name = "slint-graph"
+name = "kira"
 version = "0.1.0"
 authors = ["IGI-111 <igi-111@protonmail.com>"]
 edition = "2021"
