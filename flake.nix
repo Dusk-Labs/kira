@@ -4,17 +4,27 @@
     flake-utils.url = "github:numtide/flake-utils";
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
+    nix-github-actions.url = "github:nix-community/nix-github-actions";
+    nix-github-actions.inputs.nixpkgs.follows = "nixpkgs";
   };
-
   outputs =
     {
       self,
       nixpkgs,
       crane,
       flake-utils,
+      nix-github-actions,
       ...
     }:
-    flake-utils.lib.eachDefaultSystem (
+    {
+      githubActions = nix-github-actions.lib.mkGithubMatrix {
+        checks = nixpkgs.lib.getAttrs [
+          "x86_64-linux"
+          "x86_64-darwin"
+        ] self.packages; # TODO use self.checks
+      };
+    }
+    // (flake-utils.lib.eachDefaultSystem (
       system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
@@ -71,5 +81,5 @@
           LD_LIBRARY_PATH = libPath;
         };
       }
-    );
+    ));
 }
