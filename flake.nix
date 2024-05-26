@@ -4,7 +4,7 @@
     flake-utils.url = "github:numtide/flake-utils";
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
-    nix-github-actions.url = "github:nix-community/nix-github-actions";
+    nix-github-actions.url = "github:IGI-111/nix-github-actions?ref=IGI-111/add-aarch64-darwin";
     nix-github-actions.inputs.nixpkgs.follows = "nixpkgs";
   };
   outputs =
@@ -50,6 +50,7 @@
               nativeBuildInputs
               cargoArtifacts
               ;
+            doNotSign = true; # FIXME: disable apple binary signature
             LD_LIBRARY_PATH = libPath;
           };
         in
@@ -112,7 +113,18 @@
             inherit pkgs;
             buildInputs = with pkgs; [
               openssl
-              darwin.libicov
+              darwin.signingUtils
+              darwin.libiconv
+              darwin.libobjc
+              # darwin.xcode
+              # darwin.apple_sdk.sdk
+              darwin.apple_sdk.Libsystem
+              # darwin.apple_sdk.frameworks
+              darwin.apple_sdk.frameworks.SystemConfiguration
+              darwin.apple_sdk.frameworks.AppKit
+              darwin.apple_sdk.frameworks.CoreFoundation
+              darwin.apple_sdk.frameworks.Cocoa
+              darwin.apple_sdk.frameworks.Security
             ];
             nativeBuildInputs = with pkgs; [
               rustc
@@ -123,6 +135,8 @@
               slint-lsp
 
               pkg-config
+              uutils-coreutils
+              findutils
             ];
           };
       };
@@ -130,7 +144,9 @@
     {
       githubActions = nix-github-actions.lib.mkGithubMatrix { inherit (self) checks; };
     }
-    // flake-utils.lib.eachSystem [ "x86_64-linux" ] (
-      system: buildPackageForSystem buildPackageDeps."${system}"
-    );
+    // flake-utils.lib.eachSystem [
+      "x86_64-linux"
+      # "x86_64-darwin"
+      "aarch64-darwin"
+    ] (system: buildPackageForSystem buildPackageDeps."${system}");
 }
