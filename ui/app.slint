@@ -1,4 +1,4 @@
-import { GraphLogic, Graph, NodeData, LinkData, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "graph.slint";
+import { GraphLogic, Graph, NodeData, LinkData, FieldType, FloatingLinkData, MoveAreaLogic, LinkLogic, NodeLogic } from "graph.slint";
 import { SearchItem, Palette, PaletteSearch } from "command_palette.slint";
 import { Timeline } from "timeline.slint";
 import { Tabs, TabLogic } from "tabs.slint";
@@ -12,7 +12,8 @@ export {
     PaletteSearch,
     TabLogic,
     MenuLogic,
-    GraphLogic
+    GraphLogic,
+    FieldType
 }
 
 export component View inherits Window {

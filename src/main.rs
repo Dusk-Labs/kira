@@ -11,6 +11,8 @@ use slint::ComponentHandle;
 use ui::View;
 
 fn main() -> Result<(), slint::PlatformError> {
+    tracing_subscriber::fmt::init();
+
     let model = Model::new();
 
     let ui = View::new()?;
@@ -19,5 +21,6 @@ fn main() -> Result<(), slint::PlatformError> {
     std::thread::spawn(move || {
         ctrl.run();
     });
+
     ui.run()
 }

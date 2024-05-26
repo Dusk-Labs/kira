@@ -31,6 +31,17 @@ pub enum Event {
     Save,
     SaveAs,
     OpenFile,
+    SetField {
+        node_idx: usize,
+        input: String,
+        ty: String,
+        value: String
+    },
+    Render,
+    SetNodeOutput {
+        node: usize,
+        output: String,
+    }
 }
 
 trait Controller {
@@ -49,6 +60,8 @@ impl Mediator {
         let (tx, rx) = std::sync::mpsc::channel();
 
         populate_available_nodes(&mut model);
+
+        model.spawn_client(tx.clone());
 
         let model = Arw::new(model);
         let ro_model = Aro::from(model.clone());
@@ -99,7 +112,10 @@ impl Mediator {
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.graph_mut().add_node(ty.clone());
+                        let n = project.get_available_node(&ty).unwrap();
+                        let fields = n.fields.into_iter().collect::<Vec<_>>();
+
+                        project.graph_mut().add_node(ty.clone(), fields);
                     }
                     notify!(Graph);
                 }
@@ -183,6 +199,66 @@ impl Mediator {
                     }
                     notify!(Graph);
                 }
+                SetField { node_idx, ref input, ref ty, ref value } => {
+                    use crate::model::{TY_INT, TY_FLOAT, TY_SELECT, TY_STRING};
+
+                    let mut model = self.model.write();
+                    let Some(project) = model.tabs_mut().selected_project_mut() else {
+                        continue;
+                    };
+
+                    let Some(state) = project.graph_mut().get_state_mut(node_idx, &input) else {
+                        continue;
+                    };
+
+                    match ty.as_str() {
+                        TY_STRING | TY_SELECT => state.set_text(value.clone()),
+                        TY_INT => {
+                            let Ok(value) = value.parse() else {
+                                continue;
+                            };
+
+                            state.set_int(value);
+                        },
+                        TY_FLOAT => {
+                            let Ok(value) = value.parse() else {
+                                continue;
+                            };
+
+                            state.set_float(value);
+                        },
+                        _ => {},
+                    }
+                }
+                Render => {
+                    let mut model = self.model.write();
+                    let Some(project) = model.tabs_mut().selected_project_mut() else {
+                        continue;
+                    };
+
+                    let available_nodes = project.available_nodes();
+                    let mut wf = crate::model::WorkflowPrompt::new();
+
+                    wf.from_graph(available_nodes, project.graph());
+
+                    println!("\n");
+                    println!("{:#?}", &wf);
+
+                    crate::model::Backend::exec(&wf);
+                }
+                SetNodeOutput { node, output } => {
+                    println!("Output for node idx {} is at path {}", node, output);
+
+                    let image = crate::model::Backend::fetch_image(output);
+
+                    let mut model = self.model.write();
+                    let Some(project) = model.tabs_mut().selected_project_mut() else {
+                        continue;
+                    };
+
+                    let node = project.graph_mut().get_node_mut(node).unwrap();
+                    node.image = Some(image);
+                }
             }
         }
     }
@@ -251,6 +327,7 @@ fn populate_available_nodes(model: &mut Model) {
                     ("Text".into(), "TXT".into()),
                     ("Image".into(), "IMG".into()),
                 ],
+                fields: vec![],
                 name,
                 description: "Node of type A".into(),
                 category: "Dummy".into(),
@@ -262,6 +339,7 @@ fn populate_available_nodes(model: &mut Model) {
             Node {
                 inputs: vec![("Image".into(), "IMG".into())],
                 outputs: vec![],
+                fields: vec![],
                 name,
                 description: "Node of type B".into(),
                 category: "Dummy".into(),
@@ -273,6 +351,7 @@ fn populate_available_nodes(model: &mut Model) {
             Node {
                 inputs: vec![],
                 outputs: vec![("Text".into(), "TXT".into()), ("Text".into(), "TXT".into())],
+                fields: vec![],
                 name,
                 description: "Node of type C".into(),
                 category: "Dummy".into(),
@@ -291,14 +370,21 @@ fn populate_available_nodes(model: &mut Model) {
                         Node {
                             inputs: v
                                 .input
-                                .into_iter()
-                                .map(|(lbl, ty)| (lbl, LinkType(ty.ty())))
+                                .iter()
+                                .filter(|(_, ty)| ty.is_connection())
+                                .map(|(lbl, ty)| (lbl.clone(), LinkType(ty.ty())))
                                 .collect(),
                             outputs: v
                                 .output_name
                                 .into_iter()
                                 .zip(v.output)
                                 .map(|(lbl, ty)| (lbl, LinkType(ty.into())))
+                                .collect(),
+                            fields: v
+                                .input
+                                .iter()
+                                .filter(|(_, ty)| !ty.is_connection())
+                                .map(|(lbl, ty)| (lbl.clone(), ty.clone()))
                                 .collect(),
                             name: v.display_name,
                             description: v.description,

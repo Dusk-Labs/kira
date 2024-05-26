@@ -56,6 +56,7 @@ export global MenuLogic {
     callback open_file();
     callback save();
     callback save_as();
+    callback render();
 }
 
 export component Menu inherits Rectangle {
@@ -76,6 +77,10 @@ export component Menu inherits Rectangle {
             MenuPopupItem  {
                 name: "Save as...";
                 clicked => { MenuLogic.save_as(); }
+            }
+            MenuPopupItem {
+                name: "Render";
+                clicked => { MenuLogic.render(); }
             }
             // MenuPopupItem  { name: "Exit"; }
         }

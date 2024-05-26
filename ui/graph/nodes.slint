@@ -1,8 +1,34 @@
-import { LinkData, NodeData, FloatingLinkData, FloatingState } from "state.slint";
+import { LinkData, NodeData, FloatingLinkData, FloatingState, FieldType } from "state.slint";
 import { LinkLayout, LinkLogic } from "links.slint";
+import { StandardListView, TextEdit, LineEdit } from "std-widgets.slint";
 
 export global NodeLogic {
     callback move_node(int, length, length);
+    callback set_field(int, string, string, string);
+}
+
+component IntInput inherits VerticalLayout {
+    in property<string> text;
+    in property<string> default-value;
+    in property<InputType> input-type : InputType.number;
+
+    callback edited(string);
+    
+    Text {
+        text: parent.text;
+    }
+
+    LineEdit {
+        width: 100%;
+        height: 20px;
+        font-size: 14px;
+        input-type: parent.input-type;
+        text: parent.default-value;
+
+        edited(text) => {
+            parent.edited(text);
+        }
+    }
 }
 
 export component Node inherits Rectangle {
@@ -13,12 +39,14 @@ export component Node inherits Rectangle {
     in property <float> zoom;
     in property <float> offset-x;
     in property <float> offset-y;
+
     x: (n.x + offset-x*1px) * zoom;
     y: (n.y - 10px + offset-y*1px) * zoom;
     background: #0f0f0f;
     width: n.width * zoom;
     height: l.preferred-height;
     border-radius: 3px * zoom;
+
     TouchArea {
         moved => {
             if (self.pressed) {
@@ -55,6 +83,7 @@ export component Node inherits Rectangle {
                         border-bottom-right-radius: 5px * zoom;
                         border-top-right-radius: 5px * zoom;
                         background: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty) : LinkLayout.colorFromstring(input.ty).darker(1);
+
                         input_ta := TouchArea {
                             clicked => {
                                 if floating.floating_state == FloatingState.none {
@@ -105,6 +134,55 @@ export component Node inherits Rectangle {
                 }
             }
         }
+
+        for input[input_idx] in n.input_fields: HorizontalLayout {
+            if input.ty == FieldType.select: StandardListView {
+                width: 100%;
+                height: 100px;
+                model: input.options;
+                current-item: input.default_option;
+
+                current-item-changed(idx) => {
+                    NodeLogic.set_field(node_idx, input.name, input.ty, self.model[idx].text);
+                }
+            }
+
+            if input.ty == FieldType.string-input: TextEdit {
+                width: 100%;
+                height: 150px;
+                font-size: 14px;
+
+                text: input.default_text;
+
+                edited(text) => {
+                    NodeLogic.set_field(node_idx, input.name, input.ty, text);
+                }
+            }
+
+            if input.ty == FieldType.int-input: IntInput {
+                text: input.name;
+                default-value: input.default_value;
+
+                edited(text) => {
+                    NodeLogic.set_field(node_idx, input.name, input.ty, text);
+                }
+            }
+
+            if input.ty == FieldType.float-input: IntInput {
+                text: input.name;
+                default-value: input.default-value;
+                input-type: InputType.decimal;
+
+                edited(text) => {
+                    NodeLogic.set_field(node_idx, input.name, input.ty, text);
+                }
+            }
+
+            if input.ty == FieldType.image-output: Image {
+                source: input.image;
+            }
+        }
+
         Rectangle {
             Text {
                 color: white;

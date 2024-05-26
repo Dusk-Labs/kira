@@ -1,16 +1,33 @@
 pub mod node;
+pub mod websocket;
+pub mod workflow;
+pub mod conv;
 
 use std::collections::HashMap;
 use std::error::Error;
 
 use node::Node;
 use node::RawNode;
+use crate::ctrl::Event;
+
+use tokio::runtime;
 
 #[derive(Debug)]
-pub struct Backend {}
+pub struct Backend {
+    rt: runtime::Runtime,
+}
+
 impl Backend {
     pub fn new() -> Self {
-        Self {}
+        let rt = runtime::Builder::new_multi_thread().enable_all().build().unwrap();
+
+        Self {
+            rt
+        }
+    }
+
+    pub fn spawm_client(&self, tx: std::sync::mpsc::Sender<Event>) {
+        self.rt.block_on(websocket::WsClient::new(tx).listen());
     }
 }
 
@@ -35,4 +52,31 @@ impl Backend {
 
         Ok(result)
     }
+
+    pub fn exec(compute_graph: &workflow::WorkflowPrompt) {
+        let url = "http://127.0.0.1:8188/prompt";
+        
+        let client = reqwest::blocking::Client::new();
+
+        let resp = client.post(url)
+            .json(compute_graph)
+            .send()
+            .unwrap();
+
+        let json = resp.json::<serde_json::Value>();
+
+        println!("{:?}", json);
+    }
+
+    pub fn fetch_image(image_url: String) -> image::RgbImage {
+        let resp = reqwest::blocking::get(image_url).unwrap();
+
+        let img = image::load_from_memory(
+            &resp.bytes().unwrap(),
+        ).unwrap();
+
+        img.into_rgb8()
+    }
 }
+
+const RAW: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/test/", "test_prompt.json"));

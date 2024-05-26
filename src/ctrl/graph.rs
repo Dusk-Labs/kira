@@ -50,10 +50,11 @@ impl Controller for Graph {
             RemoveLink(..) | AddLink(..) => {
                 Links::notify(ui, model, evt);
             }
-            AddNode(..) => {
+            AddNode(..) | SetField { .. } => {
                 Nodes::notify(ui, model, evt);
             }
-            Save | SaveAs | SetCommandSearch(..) => {}
+            Save | SaveAs | SetCommandSearch(..) | Render => {}
+            _ => {}
         }
     }
 }

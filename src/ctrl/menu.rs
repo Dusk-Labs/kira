@@ -24,6 +24,10 @@ impl Controller for Menu {
             let tx = tx.clone();
             move || tx.send(Event::SaveAs).unwrap()
         });
+        ui.global::<MenuLogic>().on_render({
+            let tx = tx.clone();
+            move || tx.send(Event::Render).unwrap()
+        });
     }
     fn notify(_ui: &View, _model: &Model, _evt: &Event) {}
 }
