@@ -20,8 +20,8 @@
       githubActions = nix-github-actions.lib.mkGithubMatrix {
         checks = nixpkgs.lib.getAttrs [
           "x86_64-linux"
-          "x86_64-darwin"
-        ] self.packages; # TODO use self.checks
+          # "x86_64-darwin"
+        ] self.checks;
       };
     }
     // (flake-utils.lib.eachDefaultSystem (
@@ -51,33 +51,52 @@
           # kdialog
         ];
         libPath = pkgs.lib.makeLibraryPath buildInputs;
-      in
-      {
-        packages.default = craneLib.buildPackage {
-          src =
-            let
-              # Only keeps slint files
-              dirFilter = path: _type: builtins.match ".*(assets|src|ui)/.*$" path != null;
-              slintFilter = path: _type: builtins.match ".*slint$" path != null;
-              sourceFilter =
-                path: type:
-                (dirFilter path type) || (slintFilter path type) || (craneLib.filterCargoSources path type);
-            in
-            nixpkgs.lib.cleanSourceWith {
-              src = craneLib.path ./.;
-              filter = sourceFilter;
-            };
-
-          # Add extra inputs here or any other derivation settings
-          # doCheck = true;
-          buildInputs = buildInputs;
-          nativeBuildInputs = nativeBuildInputs;
+        src =
+          let
+            # Only keeps slint files
+            dirFilter = path: _type: builtins.match ".*(assets|src|ui)/.*$" path != null;
+            slintFilter = path: _type: builtins.match ".*slint$" path != null;
+            sourceFilter =
+              path: type:
+              (dirFilter path type) || (slintFilter path type) || (craneLib.filterCargoSources path type);
+          in
+          nixpkgs.lib.cleanSourceWith {
+            src = craneLib.path ./.;
+            filter = sourceFilter;
+          };
+        cargoArtifacts = craneLib.buildDepsOnly {
+          inherit src buildInputs nativeBuildInputs;
           LD_LIBRARY_PATH = libPath;
         };
-        # `nix develop`
+        kira = craneLib.buildPackage {
+          inherit
+            src
+            buildInputs
+            nativeBuildInputs
+            cargoArtifacts
+            ;
+          LD_LIBRARY_PATH = libPath;
+        };
+      in
+      {
+        packages.default = kira;
+
+        checks = {
+          inherit kira;
+          kira-clippy = craneLib.cargoClippy {
+            inherit
+              src
+              buildInputs
+              nativeBuildInputs
+              cargoArtifacts
+              ;
+            cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+          };
+          kira-fmt = craneLib.cargoFmt { inherit src; };
+        };
+
         devShell = pkgs.mkShell {
-          buildInputs = buildInputs;
-          nativeBuildInputs = nativeBuildInputs;
+          inherit buildInputs nativeBuildInputs;
           LD_LIBRARY_PATH = libPath;
         };
       }
