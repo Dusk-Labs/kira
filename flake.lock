@@ -38,6 +38,27 @@
         "type": "github"
       }
     },
+    "nix-github-actions": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1716823556,
+        "narHash": "sha256-xe91WnzDwGrnY2O992hK1Frq9bpj+NMvl43BtjX/UJs=",
+        "owner": "IGI-111",
+        "repo": "nix-github-actions",
+        "rev": "878fcd535257a2fd22d5d1e95cd4b447bb94ca94",
+        "type": "github"
+      },
+      "original": {
+        "owner": "IGI-111",
+        "ref": "IGI-111/add-aarch64-darwin",
+        "repo": "nix-github-actions",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1716715802,
@@ -58,6 +79,7 @@
       "inputs": {
         "crane": "crane",
         "flake-utils": "flake-utils",
+        "nix-github-actions": "nix-github-actions",
         "nixpkgs": "nixpkgs"
       }
     },
