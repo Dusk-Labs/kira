@@ -2,11 +2,11 @@ use super::{Aro, Controller};
 use crate::{
     ctrl::Event,
     model::Model,
-    ui::{self, NodeData, Slot, View, Field},
+    ui::{self, Field, NodeData, Slot, View},
 };
-use slint::{ComponentHandle, VecModel};
-use slint::StandardListViewItem;
 use slint::SharedString;
+use slint::StandardListViewItem;
+use slint::{ComponentHandle, VecModel};
 use std::sync::mpsc::Sender;
 
 pub struct Nodes;
@@ -15,21 +15,25 @@ impl Controller for Nodes {
     fn setup(model: Aro<Model>, ui: &View, tx: Sender<Event>) {
         // TODO: Make me a macro!
         let tx_clone = tx.clone();
-        ui.global::<ui::NodeLogic>().on_move_node(move |node_idx, x, y| {
-                tx_clone.send(Event::SetNodePosition(node_idx as usize, x, y))
+        ui.global::<ui::NodeLogic>()
+            .on_move_node(move |node_idx, x, y| {
+                tx_clone
+                    .send(Event::SetNodePosition(node_idx as usize, x, y))
                     .unwrap();
-            }
-        );
+            });
 
         let tx_clone = tx.clone();
-        ui.global::<ui::NodeLogic>().on_set_field(move |node_idx, input, ty, value| {
-            tx_clone.send(Event::SetField {
-                node_idx: node_idx as _,
-                input: input.into(),
-                ty: ty.into(),
-                value: value.into()
-            }).unwrap();
-        });
+        ui.global::<ui::NodeLogic>()
+            .on_set_field(move |node_idx, input, ty, value| {
+                tx_clone
+                    .send(Event::SetField {
+                        node_idx: node_idx as _,
+                        input: input.into(),
+                        ty: ty.into(),
+                        value: value.into(),
+                    })
+                    .unwrap();
+            });
 
         let model = model.read();
         refresh(ui, &model);
@@ -53,15 +57,17 @@ fn refresh(ui: &View, model: &Model) {
         .map(|(idx, ni)| {
             let n = project.get_available_node(&ni.ty).unwrap();
 
-            let inputs = n.inputs
+            let inputs = n
+                .inputs
                 .iter()
                 .map(|(name, ty)| Slot {
                     name: name.clone().into(),
                     ty: ty.clone().into(),
                 })
                 .collect::<Vec<_>>();
-                         
-            let outputs = n.outputs
+
+            let outputs = n
+                .outputs
                 .iter()
                 .map(|(name, ty)| Slot {
                     name: name.clone().into(),
@@ -98,7 +104,11 @@ fn refresh(ui: &View, model: &Model) {
                 .collect::<Vec<_>>();
 
             if let Some(ref img) = ni.image {
-                let pix_buf = slint::SharedPixelBuffer::<slint::Rgb8Pixel>::clone_from_slice(img.as_raw(), img.width(), img.height());
+                let pix_buf = slint::SharedPixelBuffer::<slint::Rgb8Pixel>::clone_from_slice(
+                    img.as_raw(),
+                    img.width(),
+                    img.height(),
+                );
 
                 let img = slint::Image::from_rgb8(pix_buf);
                 input_fields.push(Field {

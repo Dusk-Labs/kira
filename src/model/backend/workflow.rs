@@ -1,13 +1,13 @@
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::Value;
 use serde_json::json;
+use serde_json::Value;
 
-use std::collections::HashMap;
 use std::collections::hash_map::Entry;
+use std::collections::HashMap;
 
-use crate::model::tabs::project::graph::Graph;
 use crate::model::backend::node::NodeField;
+use crate::model::tabs::project::graph::Graph;
 use crate::model::tabs::project::graph::NodeType;
 use crate::model::tabs::project::Node as AvailableNode;
 
@@ -30,9 +30,14 @@ impl WorkflowPrompt {
         }
     }
 
-    pub fn from_graph(&mut self, available_nodes: &HashMap<NodeType, AvailableNode>, graph: &Graph) {
+    pub fn from_graph(available_nodes: &HashMap<NodeType, AvailableNode>, graph: &Graph) -> Self {
+        let mut wf = Self::new();
+
         for link in graph.get_links() {
-            let Some((src, dst)) = graph.get_node(link.src_node).zip(graph.get_node(link.dst_node)) else {
+            let Some((src, dst)) = graph
+                .get_node(link.src_node)
+                .zip(graph.get_node(link.dst_node))
+            else {
                 continue;
             };
 
@@ -44,45 +49,44 @@ impl WorkflowPrompt {
                 continue;
             };
 
-            let dst_node = self.create_or_get_node(dst.ty.0.clone(), link.dst_node, dst_widgets_values);
+            let dst_node =
+                wf.create_or_get_node(dst.ty.0.clone(), link.dst_node, dst_widgets_values);
 
             let Some(node_template) = available_nodes.get(&dst.ty) else {
                 continue;
             };
 
-            let (field, ty) = dbg!(&node_template.inputs).get(dbg!(link.dst_slot)).expect("cant find input slot on inputting node");
+            let (field, _ty) = dbg!(&node_template.inputs)
+                .get(dbg!(link.dst_slot))
+                .expect("cant find input slot on inputting node");
 
             let vlink = PromptInputValue::Link {
                 input_idx: link.src_slot,
-                node_id: link.src_node.to_string()
+                node_id: link.src_node.to_string(),
             };
 
             dst_node.inputs.insert(field.clone(), vlink);
 
-            let src_node = self.create_or_get_node(src.ty.0.clone(), link.src_node, src_widgets_values);
+            wf.create_or_get_node(src.ty.0.clone(), link.src_node, src_widgets_values);
         }
+        wf
     }
 
     fn create_or_get_node(
         &mut self,
         class_type: String,
         node_id: usize,
-        widgets: &Vec<(String, NodeField)>,
+        widgets: &[(String, NodeField)],
     ) -> &mut PromptNode {
         match self.prompt.entry(node_id.to_string()) {
             Entry::Occupied(entry) => entry.into_mut(),
             Entry::Vacant(entry) => {
                 let inputs = widgets
-                    .into_iter()
-                    .map(|(k, v)| {
-                        (k.clone(), PromptInputValue::from(v.clone()))
-                    })
+                    .iter()
+                    .map(|(k, v)| (k.clone(), PromptInputValue::from(v.clone())))
                     .collect::<HashMap<_, _>>();
 
-                let value = PromptNode {
-                    class_type,
-                    inputs,
-                };
+                let value = PromptNode { class_type, inputs };
 
                 entry.insert(value)
             }
@@ -100,10 +104,7 @@ pub struct PromptNode {
 
 #[derive(Clone, Debug)]
 pub enum PromptInputValue {
-    Link {
-        node_id: String,
-        input_idx: usize,
-    },
+    Link { node_id: String, input_idx: usize },
     Text(String),
     Float(f64),
     Integer(i64),
@@ -112,14 +113,14 @@ pub enum PromptInputValue {
 impl<'de> PromptInputValue {
     fn deserialize<D>(_: D) -> Result<HashMap<String, Self>, D::Error>
     where
-        D: serde::de::Deserializer<'de>
+        D: serde::de::Deserializer<'de>,
     {
         Ok(Default::default())
     }
 
     fn serialize<S>(items: &HashMap<String, Self>, ser: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::ser::Serializer
+        S: serde::ser::Serializer,
     {
         let items = items
             .iter()
@@ -146,9 +147,11 @@ impl From<NodeField> for PromptInputValue {
             NodeField::FloatInput(value) => Self::Float(value.state as _),
             NodeField::StringInput(value) => Self::Text(value.state),
             NodeField::Select { state, options } => {
-                let state = state.and_then(|idx| options.get(idx).cloned()).unwrap_or_default();
+                let state = state
+                    .and_then(|idx| options.get(idx).cloned())
+                    .unwrap_or_default();
 
-                return Self::Text(state);
+                Self::Text(state)
             }
             _ => unimplemented!(),
         }
@@ -321,39 +324,36 @@ impl LinkItem {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[serde(remote = "LinkItem")]
 struct LinkItemRemote(
-    #[serde(getter = "LinkItem::link")]
-    usize,
-    #[serde(getter = "LinkItem::out_node_id")]
-    usize,
-    #[serde(getter = "LinkItem::out_node_link_idx")]
-    usize, 
-    #[serde(getter = "LinkItem::in_node_id")]
-    usize,
-    #[serde(getter = "LinkItem::in_node_link_idx")]
-    usize,
-    #[serde(getter = "LinkItem::ty")]
-    String
+    #[serde(getter = "LinkItem::link")] usize,
+    #[serde(getter = "LinkItem::out_node_id")] usize,
+    #[serde(getter = "LinkItem::out_node_link_idx")] usize,
+    #[serde(getter = "LinkItem::in_node_id")] usize,
+    #[serde(getter = "LinkItem::in_node_link_idx")] usize,
+    #[serde(getter = "LinkItem::ty")] String,
 );
 
 impl<'de> LinkItemRemote {
-    fn serialize_vec<S>(items: &Vec<LinkItem>, ser: S) -> Result<S::Ok, S::Error>
+    fn serialize_vec<S>(items: &[LinkItem], ser: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::ser::Serializer
+        S: serde::ser::Serializer,
     {
         #[derive(Serialize)]
         struct Helper(#[serde(with = "LinkItemRemote")] LinkItem);
-        let items = items.into_iter().map(|x| Helper(x.clone())).collect();
+        let items = items.iter().map(|x| Helper(x.clone())).collect();
 
         Vec::serialize(&items, ser)
     }
 
     fn deserialize_vec<D>(de: D) -> Result<Vec<LinkItem>, D::Error>
     where
-        D: serde::de::Deserializer<'de>
+        D: serde::de::Deserializer<'de>,
     {
         #[derive(Deserialize)]
         struct Helper(#[serde(with = "LinkItemRemote")] LinkItem);
-        Ok(Vec::deserialize(de)?.into_iter().map(|Helper(item)| item).collect())
+        Ok(Vec::deserialize(de)?
+            .into_iter()
+            .map(|Helper(item)| item)
+            .collect())
     }
 }
 
@@ -379,20 +379,27 @@ mod test {
         let data = "[[1,2,3,4,5,\"ABC\"]]";
 
         let mut de = serde_json::Deserializer::from_str(data);
-        let dur = LinkItemRemote::deserialize_vec(&mut de).unwrap();
+        let _ = LinkItemRemote::deserialize_vec(&mut de).unwrap();
     }
 
     #[test]
     fn test_de_workflow_simple() {
-        let data = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/test/test_workflow_simple.json"));
+        let data = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/test/test_workflow_simple.json"
+        ));
 
-        let workflow: Workflow = serde_json::from_str(data).unwrap();
+        let _: Workflow = serde_json::from_str(data).unwrap();
     }
 
     #[test]
     fn test_de_prompt_simple() {
-        const RAW: &str = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/assets/test/", "test_prompt.json"));
+        const RAW: &str = include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/assets/test/",
+            "test_prompt.json"
+        ));
 
-        let prompt: WorkflowPrompt = serde_json::from_str(RAW).unwrap();
+        let _: WorkflowPrompt = serde_json::from_str(RAW).unwrap();
     }
 }

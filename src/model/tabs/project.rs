@@ -1,7 +1,7 @@
 use self::graph::{Graph, LinkType, NodeType};
+use crate::model::backend::node::NodeField;
 use simsearch::{SearchOptions, SimSearch};
 use std::collections::HashMap;
-use crate::model::backend::node::NodeField;
 
 pub mod graph;
 

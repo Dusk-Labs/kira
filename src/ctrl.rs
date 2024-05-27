@@ -1,6 +1,6 @@
 use self::{command_palette::CommandPalette, graph::Graph, menu::Menu, tabs::Tabs};
 use crate::{
-    model::{self, Link, LinkType, Model, Node, NodeType},
+    model::{self, Link, LinkType, Model, Node, NodeType, WorkflowPrompt},
     ui::View,
     utils::{Aro, Arw},
 };
@@ -35,13 +35,13 @@ pub enum Event {
         node_idx: usize,
         input: String,
         ty: String,
-        value: String
+        value: String,
     },
     Render,
     SetNodeOutput {
         node: usize,
         output: String,
-    }
+    },
 }
 
 trait Controller {
@@ -112,7 +112,7 @@ impl Mediator {
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        let n = project.get_available_node(&ty).unwrap();
+                        let n = project.get_available_node(ty).unwrap();
                         let fields = n.fields.into_iter().collect::<Vec<_>>();
 
                         project.graph_mut().add_node(ty.clone(), fields);
@@ -199,15 +199,20 @@ impl Mediator {
                     }
                     notify!(Graph);
                 }
-                SetField { node_idx, ref input, ref ty, ref value } => {
-                    use crate::model::{TY_INT, TY_FLOAT, TY_SELECT, TY_STRING};
+                SetField {
+                    node_idx,
+                    ref input,
+                    ref ty,
+                    ref value,
+                } => {
+                    use crate::model::{TY_FLOAT, TY_INT, TY_SELECT, TY_STRING};
 
                     let mut model = self.model.write();
                     let Some(project) = model.tabs_mut().selected_project_mut() else {
                         continue;
                     };
 
-                    let Some(state) = project.graph_mut().get_state_mut(node_idx, &input) else {
+                    let Some(state) = project.graph_mut().get_state_mut(node_idx, input) else {
                         continue;
                     };
 
@@ -219,15 +224,15 @@ impl Mediator {
                             };
 
                             state.set_int(value);
-                        },
+                        }
                         TY_FLOAT => {
                             let Ok(value) = value.parse() else {
                                 continue;
                             };
 
                             state.set_float(value);
-                        },
-                        _ => {},
+                        }
+                        _ => {}
                     }
                 }
                 Render => {
@@ -237,9 +242,7 @@ impl Mediator {
                     };
 
                     let available_nodes = project.available_nodes();
-                    let mut wf = crate::model::WorkflowPrompt::new();
-
-                    wf.from_graph(available_nodes, project.graph());
+                    let wf = WorkflowPrompt::from_graph(available_nodes, project.graph());
 
                     println!("\n");
                     println!("{:#?}", &wf);
@@ -378,7 +381,7 @@ fn populate_available_nodes(model: &mut Model) {
                                 .output_name
                                 .into_iter()
                                 .zip(v.output)
-                                .map(|(lbl, ty)| (lbl, LinkType(ty.into())))
+                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
                                 .collect(),
                             fields: v
                                 .input

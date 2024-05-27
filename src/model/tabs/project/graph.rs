@@ -1,7 +1,7 @@
+use crate::model::backend::node::NodeField;
 use serde::{Deserialize, Serialize};
 use slint::SharedString;
 use std::collections::HashMap;
-use crate::model::backend::node::NodeField;
 
 pub type NodeId = usize;
 pub type FieldStates = HashMap<NodeId, Vec<(String, NodeField)>>;

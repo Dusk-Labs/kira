@@ -3,22 +3,21 @@ use ezsockets::client::ClientExt;
 use ezsockets::ClientConfig;
 use serde::Deserialize;
 
-use std::sync::mpsc::Sender;
 use crate::ctrl::Event;
+use std::sync::mpsc::Sender;
 
 pub struct WsClient {
-    tx: Sender<Event>
+    tx: Sender<Event>,
 }
 
 impl WsClient {
     pub fn new(tx: Sender<Event>) -> Self {
-        Self {
-            tx
-        }
+        Self { tx }
     }
 
-    pub async fn listen(mut self) -> () {
-        let config = ClientConfig::new("ws://127.0.0.1:8188/ws?clientId=f9e9494bb05849738d26b3b914e3eec2");
+    pub async fn listen(self) {
+        let config =
+            ClientConfig::new("ws://127.0.0.1:8188/ws?clientId=f9e9494bb05849738d26b3b914e3eec2");
 
         let (handle, future) = ezsockets::connect(move |_client| self, config).await;
 
@@ -48,15 +47,15 @@ impl ClientExt for WsClient {
 
         println!("{:?}", data);
 
-        match data {
-            Message::Executed { node, output, .. } => {
-                let node: usize = node.parse().unwrap();
-                let first = &output.images[0];
-                let output = format!("http://127.0.0.1:8188/view?filename={}&type=temp", first.filename);
+        if let Message::Executed { node, output, .. } = data {
+            let node: usize = node.parse().unwrap();
+            let first = &output.images[0];
+            let output = format!(
+                "http://127.0.0.1:8188/view?filename={}&type=temp",
+                first.filename
+            );
 
-                self.tx.send(Event::SetNodeOutput { node, output }).unwrap();
-            }
-            _ => {}
+            self.tx.send(Event::SetNodeOutput { node, output }).unwrap();
         }
 
         Ok(())
@@ -68,10 +67,10 @@ impl ClientExt for WsClient {
 #[serde(rename_all = "snake_case")]
 pub enum Message {
     Status {
-        status: Status
+        status: Status,
     },
     ExecutionStart {
-        prompt_id: Option<String>
+        prompt_id: Option<String>,
     },
     ExecutionCached {
         prompt_id: String,
@@ -91,7 +90,7 @@ pub enum Message {
         node: String,
         output: NodeOutput,
         prompt_id: String,
-    }
+    },
 }
 
 #[derive(Deserialize, Debug)]
@@ -101,7 +100,7 @@ pub struct Status {
 
 #[derive(Deserialize, Debug)]
 pub struct ExecInfo {
-    pub queue_remaining: usize
+    pub queue_remaining: usize,
 }
 
 #[derive(Deserialize, Debug)]
@@ -114,5 +113,5 @@ pub struct ImageOutput {
     pub filename: String,
     pub subfolder: String,
     #[serde(rename = "type")]
-    pub ty: String
+    pub ty: String,
 }

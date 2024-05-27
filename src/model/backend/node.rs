@@ -1,10 +1,9 @@
-use std::collections::HashMap;
 use indexmap::IndexMap;
 
 use serde::Deserialize;
 use serde::Serialize;
-use serde_json::Value;
 use serde_json::json;
+use serde_json::Value;
 
 #[derive(Debug)]
 pub struct Node {
@@ -25,14 +24,11 @@ impl From<RawNode> for Node {
         for (k, v) in raw.input.required.into_iter() {
             let input = match v.as_slice() {
                 // Cases for drop-downs and simple edge connections.
-                [first] => {
-                    NodeField::try_parse_selector(&first)
-                        .or_else(|| NodeField::try_parse_edge(&first))
-                        .unwrap_or(NodeField::Unknown)
-                }
+                [first] => NodeField::try_parse_selector(first)
+                    .or_else(|| NodeField::try_parse_edge(first))
+                    .unwrap_or(NodeField::Unknown),
                 [ty, params] => {
-                    NodeField::try_parse_input(ty, params)
-                        .unwrap_or(NodeField::Unknown)
+                    NodeField::try_parse_input(ty, params).unwrap_or(NodeField::Unknown)
                 }
                 _ => {
                     panic!("Exepcted two items in node field");
@@ -42,7 +38,7 @@ impl From<RawNode> for Node {
             inputs.insert(k, input);
         }
 
-        Node { 
+        Node {
             input: inputs,
             output: raw.output,
             output_name: raw.output_name,
@@ -72,7 +68,7 @@ pub enum NodeField {
         state: Option<usize>,
     },
     Connection(String),
-    Unknown
+    Unknown,
 }
 
 impl NodeField {
@@ -97,15 +93,15 @@ impl NodeField {
     pub fn options(&self) -> Option<Vec<String>> {
         match self {
             Self::Select { options, .. } => Some(options.clone()),
-            _ => None
+            _ => None,
         }
     }
 
     pub fn text(&self) -> Option<String> {
         match self {
             Self::StringInput(input) => Some(input.state.clone()),
-            Self::Select { options, state } => options.get(state.clone()?).cloned(),
-            _ => None
+            Self::Select { options, state } => state.and_then(|s| options.get(s)).cloned(),
+            _ => None,
         }
     }
 
@@ -113,7 +109,7 @@ impl NodeField {
         match self {
             Self::FloatInput(input) => Some(input.state),
             Self::IntInput(input) => Some(input.state),
-            _ => None
+            _ => None,
         }
     }
 
@@ -129,11 +125,14 @@ impl NodeField {
         match self {
             Self::StringInput(ref mut input) => {
                 input.state = text;
-            },
-            Self::Select { ref options, ref mut state } => {
+            }
+            Self::Select {
+                ref options,
+                ref mut state,
+            } => {
                 *state = options.iter().position(|x| x == text.as_str());
             }
-            _ => return,
+            _ => (),
         }
     }
 
@@ -158,14 +157,14 @@ impl NodeField {
             .map(ToOwned::to_owned)
             .collect();
 
-        Some(Self::Select { options, state: None })
+        Some(Self::Select {
+            options,
+            state: None,
+        })
     }
 
     fn try_parse_edge(first: &serde_json::Value) -> Option<Self> {
-        first
-            .as_str()
-            .map(ToOwned::to_owned)
-            .map(Self::Connection)
+        first.as_str().map(ToOwned::to_owned).map(Self::Connection)
     }
 
     fn try_parse_input(ty: &serde_json::Value, second: &serde_json::Value) -> Option<Self> {
@@ -245,6 +244,7 @@ pub struct BoolInput {
 pub(super) struct RawNode {
     input: RawInput,
     output: Vec<String>,
+    #[allow(dead_code)]
     output_is_list: Vec<bool>,
     output_name: Vec<String>,
     name: String,
@@ -261,9 +261,11 @@ struct RawInput {
     // Nodes with hidden inputs:
     // - SaveImage
     // - PreviewImage
+    #[allow(dead_code)]
     hidden: Option<Value>,
     // nodes with optional inputs:
     // - LatentCompositeMasked
+    #[allow(dead_code)]
     optional: Option<Value>,
 }
 
