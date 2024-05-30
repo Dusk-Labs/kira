@@ -6,6 +6,11 @@ export global FieldType {
     in-out property<string> image-output: "Kira__Reserved_Image";
 }
 
+export global NodeLogic {
+    callback move_node(int, length, length);
+    callback set_field(int, string, string, string);
+}
+
 export struct Slot {
     name: string,
     ty: string,

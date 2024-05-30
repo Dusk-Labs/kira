@@ -20,6 +20,7 @@ slint = { version = "1.5.1", features = [ "std", "renderer-femtovg", "renderer-s
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+uuid = { version = "1.8.0", features = ["v4", "v7"] }
 
 [build-dependencies]
 slint-build = "1.5.1"

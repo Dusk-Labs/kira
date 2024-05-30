@@ -219,18 +219,10 @@ impl Mediator {
                     match ty.as_str() {
                         TY_STRING | TY_SELECT => state.set_text(value.clone()),
                         TY_INT => {
-                            let Ok(value) = value.parse() else {
-                                continue;
-                            };
-
-                            state.set_int(value);
+                            let _ = value.parse().map(|x| state.set_int(x));
                         }
                         TY_FLOAT => {
-                            let Ok(value) = value.parse() else {
-                                continue;
-                            };
-
-                            state.set_float(value);
+                            let _ = value.parse().map(|x| state.set_float(x));
                         }
                         _ => {}
                     }
@@ -242,25 +234,26 @@ impl Mediator {
                     };
 
                     let available_nodes = project.available_nodes();
-                    let wf = WorkflowPrompt::from_graph(available_nodes, project.graph());
+                    let wf = WorkflowPrompt::from_graph(available_nodes, project.graph())
+                        .with_client_id(model.backend().client_id());
 
                     println!("\n");
                     println!("{:#?}", &wf);
 
-                    crate::model::Backend::exec(&wf);
+                    let _ = model.backend().compute_graph(&wf);
                 }
-                SetNodeOutput { node, output } => {
+                SetNodeOutput { node, ref output } => {
                     println!("Output for node idx {} is at path {}", node, output);
 
-                    let image = crate::model::Backend::fetch_image(output);
-
                     let mut model = self.model.write();
-                    let Some(project) = model.tabs_mut().selected_project_mut() else {
-                        continue;
+                    let image = model.backend().fetch_image(output.into());
+
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        let node = project.graph_mut().get_node_mut(node).unwrap();
+                        node.image = image.ok();
+                        notify!(Graph);
                     };
 
-                    let node = project.graph_mut().get_node_mut(node).unwrap();
-                    node.image = Some(image);
                 }
             }
         }

@@ -2,22 +2,32 @@ use async_trait::async_trait;
 use ezsockets::client::ClientExt;
 use ezsockets::ClientConfig;
 use serde::Deserialize;
+use uuid::Uuid;
 
 use crate::ctrl::Event;
 use std::sync::mpsc::Sender;
 
 pub struct WsClient {
     tx: Sender<Event>,
+    base_url: String,
+    client_id: Uuid,
 }
 
 impl WsClient {
-    pub fn new(tx: Sender<Event>) -> Self {
-        Self { tx }
+    pub fn new(tx: Sender<Event>, base_url: String, client_id: Uuid) -> Self {
+        Self { tx, base_url, client_id }
+    }
+
+    pub fn client_id(&self) -> String {
+        let mut buffer = Uuid::encode_buffer();
+        let uuid = self.client_id.as_simple().encode_lower(&mut buffer);
+
+        uuid.to_string()
     }
 
     pub async fn listen(self) {
-        let config =
-            ClientConfig::new("ws://127.0.0.1:8188/ws?clientId=f9e9494bb05849738d26b3b914e3eec2");
+        let url = format!("{}/ws?clientId={}", self.base_url, self.client_id());
+        let config = ClientConfig::new(url.as_str());
 
         let (handle, future) = ezsockets::connect(move |_client| self, config).await;
 
@@ -51,7 +61,8 @@ impl ClientExt for WsClient {
             let node: usize = node.parse().unwrap();
             let first = &output.images[0];
             let output = format!(
-                "http://127.0.0.1:8188/view?filename={}&type=temp",
+                "{}/view?filename={}&type=temp",
+                self.base_url,
                 first.filename
             );
 

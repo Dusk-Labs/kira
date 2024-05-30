@@ -30,6 +30,11 @@ impl WorkflowPrompt {
         }
     }
 
+    pub fn with_client_id(mut self, client_id: String) -> Self {
+        self.client_id = client_id;
+        self
+    }
+
     pub fn from_graph(available_nodes: &HashMap<NodeType, AvailableNode>, graph: &Graph) -> Self {
         let mut wf = Self::new();
 

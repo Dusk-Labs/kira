@@ -35,18 +35,16 @@ impl WorkflowBuilder {
                 continue;
             };
 
-            let Some(src_widgets_values) = graph.get_state(link.src_node) else {
-                continue;
-            };
-
-            let Some(dst_widgets_values) = graph.get_state(link.dst_node) else {
-                continue;
-            };
+            let Some((src_widgets_values, dst_widgets_values)) = graph.get_state(link.src_node)
+                .zip(graph.get_state(link.dst_node)) else {
+                    continue;
+                };
 
             let mut src_widgets_values = src_widgets_values
                 .iter()
                 .filter_map(|(_, value)| value.state())
                 .collect::<Vec<_>>();
+
             let mut dst_widgets_values = dst_widgets_values
                 .iter()
                 .filter_map(|(_, value)| value.state())
@@ -62,12 +60,11 @@ impl WorkflowBuilder {
             .filter(|(ty, _)| *ty == "KSampler")
             .for_each(|(_, values)| values.insert(1, "fixed".into()));
 
-            let Some(src_id) = self.create_or_get_node(src, link.src_node, src_widgets_values)
-            else {
+            let Some(src_id) = self.create_or_get_node(src, link.src_node, src_widgets_values) else {
                 continue;
             };
-            let Some(dst_id) = self.create_or_get_node(dst, link.dst_node, dst_widgets_values)
-            else {
+
+            let Some(dst_id) = self.create_or_get_node(dst, link.dst_node, dst_widgets_values) else {
                 continue;
             };
 
