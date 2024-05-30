@@ -50,6 +50,7 @@ pub enum Event {
         node: usize,
         output: String,
     },
+    FocusPalette,
 }
 
 trait Controller {
@@ -264,6 +265,9 @@ impl Mediator {
                         node.image = image.ok();
                         notify!(Graph);
                     };
+                }
+                FocusPalette => {
+                    self.ui.upgrade_in_event_loop(move |view| view.invoke_focus()).unwrap();
                 }
             }
         }

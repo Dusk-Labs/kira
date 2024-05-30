@@ -39,6 +39,12 @@ impl Controller for Nodes {
                     .unwrap();
             });
 
+        let tx_clone = tx.clone();
+        ui.global::<ui::NodeLogic>()
+            .on_focus_callback(move || {
+                tx_clone.send(Event::FocusPalette).unwrap();
+            });
+
         let model = model.read();
         refresh(ui, &model);
     }

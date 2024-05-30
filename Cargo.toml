@@ -16,11 +16,11 @@ serde = { version = "1.0.199", features = ["derive"] }
 serde_json = { version = "1.0.116", features = ["preserve_order", "indexmap"] }
 serde_path_to_error = "0.1.16"
 simsearch = "0.2.5"
-slint = { version = "1.5.1", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
+slint = { version = "1.6.0", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.8.0", features = ["v4", "v7"] }
 
 [build-dependencies]
-slint-build = "1.5.1"
+slint-build = "1.6.0"

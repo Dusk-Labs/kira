@@ -35,6 +35,9 @@ export component Node inherits Rectangle {
                     n.x + (self.mouse-x - self.pressed-x) / zoom,
                     n.y + (self.mouse-y - self.pressed-y) / zoom,
                 );
+
+                // Refocus command palette
+                NodeLogic.focus_callback();
             } 
         }
 

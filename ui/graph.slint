@@ -50,6 +50,7 @@ export component Graph inherits Rectangle {
         }
         pointer-event(event) => {
             if event.kind == PointerEventKind.up {
+                NodeLogic.focus_callback();
                 GraphLogic.set_offset(
                     original-offset-x + (self.mouse-x - self.pressed-x) / zoom /1px,
                     original-offset-y + (self.mouse-y - self.pressed-y) / zoom /1px,
