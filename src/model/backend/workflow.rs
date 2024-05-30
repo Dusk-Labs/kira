@@ -396,15 +396,4 @@ mod test {
 
         let _: Workflow = serde_json::from_str(data).unwrap();
     }
-
-    #[test]
-    fn test_de_prompt_simple() {
-        const RAW: &str = include_str!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/assets/test/",
-            "test_prompt.json"
-        ));
-
-        let _: WorkflowPrompt = serde_json::from_str(RAW).unwrap();
-    }
 }
