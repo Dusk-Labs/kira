@@ -1,0 +1,4 @@
+[toolchain]
+channel = "nightly"
+date = "2024-05-29"
+components = [ "rustfmt", "clippy", "rust-analyzer" ]

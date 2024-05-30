@@ -1,5 +1,6 @@
 use crate::model::backend::node::NodeField;
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
+use serde::Serialize;
 use slint::SharedString;
 use std::collections::HashMap;
 

@@ -1,4 +1,5 @@
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
+use std::sync::RwLock;
 
 pub struct Aro<T>(Arc<RwLock<T>>);
 impl<T> Aro<T> {

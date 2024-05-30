@@ -33,7 +33,7 @@ impl Backend {
             .build()
             .expect("Failed to build backend client.");
 
-        Self { 
+        Self {
             rt,
             base_url: "http://127.0.0.1:8188".into(),
             client,
@@ -54,7 +54,8 @@ impl Backend {
     }
 
     pub fn spawm_client(&self, tx: std::sync::mpsc::Sender<Event>) {
-        self.rt.block_on(websocket::WsClient::new(tx, self.base_url.clone(), self.client_id).listen());
+        self.rt
+            .block_on(websocket::WsClient::new(tx, self.base_url.clone(), self.client_id).listen());
     }
 
     pub fn query_available_nodes(&self) -> Result<HashMap<String, Node>> {
@@ -98,6 +99,5 @@ impl Backend {
         let img = image::load_from_memory(&resp.bytes()?)?;
 
         Ok(img.into_rgb8())
-
     }
 }

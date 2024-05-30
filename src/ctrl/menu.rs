@@ -1,9 +1,9 @@
-use super::{Controller, Event};
-use crate::{
-    model::Model,
-    ui::{MenuLogic, View},
-    utils::Aro,
-};
+use super::Controller;
+use super::Event;
+use crate::model::Model;
+use crate::ui::MenuLogic;
+use crate::ui::View;
+use crate::utils::Aro;
 use slint::ComponentHandle;
 use std::sync::mpsc::Sender;
 

@@ -1,6 +1,9 @@
-use self::graph::{Graph, LinkType, NodeType};
+use self::graph::Graph;
+use self::graph::LinkType;
+use self::graph::NodeType;
 use crate::model::backend::node::NodeField;
-use simsearch::{SearchOptions, SimSearch};
+use simsearch::SearchOptions;
+use simsearch::SimSearch;
 use std::collections::HashMap;
 
 pub mod graph;

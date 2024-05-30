@@ -1,12 +1,16 @@
-use super::{Aro, Controller};
-use crate::{
-    ctrl::Event,
-    model::Model,
-    ui::{self, Field, NodeData, Slot, View},
-};
+use super::Aro;
+use super::Controller;
+use crate::ctrl::Event;
+use crate::model::Model;
+use crate::ui::Field;
+use crate::ui::NodeData;
+use crate::ui::Slot;
+use crate::ui::View;
+use crate::ui::{self};
+use slint::ComponentHandle;
 use slint::SharedString;
 use slint::StandardListViewItem;
-use slint::{ComponentHandle, VecModel};
+use slint::VecModel;
 use std::sync::mpsc::Sender;
 
 pub struct Nodes;

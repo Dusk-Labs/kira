@@ -1,10 +1,13 @@
-use super::{Aro, Controller};
-use crate::{
-    ctrl::Event,
-    model::{self, Model},
-    ui::{self, LinkData, View},
-};
-use slint::{ComponentHandle, VecModel};
+use super::Aro;
+use super::Controller;
+use crate::ctrl::Event;
+use crate::model::Model;
+use crate::model::{self};
+use crate::ui::LinkData;
+use crate::ui::View;
+use crate::ui::{self};
+use slint::ComponentHandle;
+use slint::VecModel;
 use std::sync::mpsc::Sender;
 
 pub struct Links;

@@ -1,10 +1,14 @@
-use super::{Aro, Controller, Event};
-use crate::{
-    model::Model,
-    ui::{TabLogic, View},
-};
-use slint::{ComponentHandle, SharedString, VecModel};
-use std::{path::Path, sync::mpsc::Sender};
+use super::Aro;
+use super::Controller;
+use super::Event;
+use crate::model::Model;
+use crate::ui::TabLogic;
+use crate::ui::View;
+use slint::ComponentHandle;
+use slint::SharedString;
+use slint::VecModel;
+use std::path::Path;
+use std::sync::mpsc::Sender;
 
 pub struct Tabs;
 

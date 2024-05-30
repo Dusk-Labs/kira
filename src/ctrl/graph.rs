@@ -1,10 +1,12 @@
-use self::{floating::Floating, links::Links, nodes::Nodes};
-use super::{Aro, Controller};
-use crate::{
-    ctrl::Event,
-    model::Model,
-    ui::{GraphLogic, View},
-};
+use self::floating::Floating;
+use self::links::Links;
+use self::nodes::Nodes;
+use super::Aro;
+use super::Controller;
+use crate::ctrl::Event;
+use crate::model::Model;
+use crate::ui::GraphLogic;
+use crate::ui::View;
 use slint::ComponentHandle;
 use std::sync::mpsc::Sender;
 

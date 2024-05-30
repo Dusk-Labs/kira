@@ -1,16 +1,15 @@
-pub use self::{
-    backend::node::{TY_FLOAT, TY_INT, TY_SELECT, TY_STRING},
-    backend::workflow::WorkflowPrompt,
-    backend::Backend,
-    tabs::{
-        project::{
-            graph::Graph,
-            graph::{Link, LinkType, NodeType},
-            Node,
-        },
-        Tabs,
-    },
-};
+pub use self::backend::node::TY_FLOAT;
+pub use self::backend::node::TY_INT;
+pub use self::backend::node::TY_SELECT;
+pub use self::backend::node::TY_STRING;
+pub use self::backend::workflow::WorkflowPrompt;
+pub use self::backend::Backend;
+pub use self::tabs::project::graph::Graph;
+pub use self::tabs::project::graph::Link;
+pub use self::tabs::project::graph::LinkType;
+pub use self::tabs::project::graph::NodeType;
+pub use self::tabs::project::Node;
+pub use self::tabs::Tabs;
 
 mod backend;
 mod file;

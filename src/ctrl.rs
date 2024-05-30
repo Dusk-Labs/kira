@@ -1,15 +1,23 @@
-use self::{command_palette::CommandPalette, graph::Graph, menu::Menu, tabs::Tabs};
-use crate::{
-    model::{self, Link, LinkType, Model, Node, NodeType, WorkflowPrompt},
-    ui::View,
-    utils::{Aro, Arw},
-};
-use slint::{ComponentHandle, Weak};
-use std::{
-    collections::HashMap,
-    fs::File,
-    sync::mpsc::{Receiver, Sender},
-};
+use self::command_palette::CommandPalette;
+use self::graph::Graph;
+use self::menu::Menu;
+use self::tabs::Tabs;
+use crate::model::Link;
+use crate::model::LinkType;
+use crate::model::Model;
+use crate::model::Node;
+use crate::model::NodeType;
+use crate::model::WorkflowPrompt;
+use crate::model::{self};
+use crate::ui::View;
+use crate::utils::Aro;
+use crate::utils::Arw;
+use slint::ComponentHandle;
+use slint::Weak;
+use std::collections::HashMap;
+use std::fs::File;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
 
 mod command_palette;
 mod graph;
@@ -205,7 +213,10 @@ impl Mediator {
                     ref ty,
                     ref value,
                 } => {
-                    use crate::model::{TY_FLOAT, TY_INT, TY_SELECT, TY_STRING};
+                    use crate::model::TY_FLOAT;
+                    use crate::model::TY_INT;
+                    use crate::model::TY_SELECT;
+                    use crate::model::TY_STRING;
 
                     let mut model = self.model.write();
                     let Some(project) = model.tabs_mut().selected_project_mut() else {
@@ -253,7 +264,6 @@ impl Mediator {
                         node.image = image.ok();
                         notify!(Graph);
                     };
-
                 }
             }
         }

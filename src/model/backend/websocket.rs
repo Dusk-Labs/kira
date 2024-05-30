@@ -15,7 +15,11 @@ pub struct WsClient {
 
 impl WsClient {
     pub fn new(tx: Sender<Event>, base_url: String, client_id: Uuid) -> Self {
-        Self { tx, base_url, client_id }
+        Self {
+            tx,
+            base_url,
+            client_id,
+        }
     }
 
     pub fn client_id(&self) -> String {
@@ -62,8 +66,7 @@ impl ClientExt for WsClient {
             let first = &output.images[0];
             let output = format!(
                 "{}/view?filename={}&type=temp",
-                self.base_url,
-                first.filename
+                self.base_url, first.filename
             );
 
             self.tx.send(Event::SetNodeOutput { node, output }).unwrap();

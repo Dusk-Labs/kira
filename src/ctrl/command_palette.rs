@@ -1,9 +1,13 @@
-use super::{Aro, Controller, Event};
-use crate::{
-    model::Model,
-    ui::{PaletteSearch, SearchItem, View},
-};
-use slint::{ComponentHandle, ModelRc, VecModel};
+use super::Aro;
+use super::Controller;
+use super::Event;
+use crate::model::Model;
+use crate::ui::PaletteSearch;
+use crate::ui::SearchItem;
+use crate::ui::View;
+use slint::ComponentHandle;
+use slint::ModelRc;
+use slint::VecModel;
 use std::sync::mpsc::Sender;
 
 pub struct CommandPalette;
