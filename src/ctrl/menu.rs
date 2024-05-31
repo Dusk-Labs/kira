@@ -1,9 +1,9 @@
-use super::{Controller, Event};
-use crate::{
-    model::Model,
-    ui::{MenuLogic, View},
-    utils::Aro,
-};
+use super::Controller;
+use super::Event;
+use crate::model::Model;
+use crate::ui::MenuLogic;
+use crate::ui::View;
+use crate::utils::Aro;
 use slint::ComponentHandle;
 use std::sync::mpsc::Sender;
 
@@ -23,6 +23,10 @@ impl Controller for Menu {
         ui.global::<MenuLogic>().on_save_as({
             let tx = tx.clone();
             move || tx.send(Event::SaveAs).unwrap()
+        });
+        ui.global::<MenuLogic>().on_render({
+            let tx = tx.clone();
+            move || tx.send(Event::Render).unwrap()
         });
     }
     fn notify(_ui: &View, _model: &Model, _evt: &Event) {}

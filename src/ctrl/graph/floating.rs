@@ -1,10 +1,11 @@
-use super::{Aro, Controller};
-use crate::{
-    ctrl::Event,
-    model::Model,
-    ui::{self, View},
-};
-use slint::{ComponentHandle, LogicalPosition};
+use super::Aro;
+use super::Controller;
+use crate::ctrl::Event;
+use crate::model::Model;
+use crate::ui::View;
+use crate::ui::{self};
+use slint::ComponentHandle;
+use slint::LogicalPosition;
 use std::sync::mpsc::Sender;
 
 pub struct Floating;

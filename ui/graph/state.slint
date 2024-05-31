@@ -1,6 +1,33 @@
+export global FieldType {
+    in-out property<string> select : "Kira__Reserved_Select";
+    in-out property<string> string-input : "Kira__Reserved_String";
+    in-out property<string> int-input : "Kira__Reserved_Int";
+    in-out property<string> float-input : "Kira__Reserved_Float";
+    in-out property<string> image-output: "Kira__Reserved_Image";
+}
+
+export global NodeLogic {
+    callback move_node(int, length, length);
+    callback set_field(int, string, string, string);
+    callback focus_callback();
+}
+
 export struct Slot {
     name: string,
     ty: string,
+}
+
+export struct Field {
+    name: string,
+    ty: string,
+    options: [StandardListViewItem],
+    default_text: string,
+    default_value: float,
+    default_option: int,
+    min: float,
+    max: float,
+    step: float,
+    image: image,
 }
 
 export struct NodeData { 
@@ -10,6 +37,7 @@ export struct NodeData {
     text: string,
     inputs: [Slot],
     outputs: [Slot],
+    input_fields: [Field],
 }
 
 export struct LinkData {

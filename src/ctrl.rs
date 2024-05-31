@@ -1,15 +1,23 @@
-use self::{command_palette::CommandPalette, graph::Graph, menu::Menu, tabs::Tabs};
-use crate::{
-    model::{self, Link, LinkType, Model, Node, NodeType},
-    ui::View,
-    utils::{Aro, Arw},
-};
-use slint::{ComponentHandle, Weak};
-use std::{
-    collections::HashMap,
-    fs::File,
-    sync::mpsc::{Receiver, Sender},
-};
+use self::command_palette::CommandPalette;
+use self::graph::Graph;
+use self::menu::Menu;
+use self::tabs::Tabs;
+use crate::model::Link;
+use crate::model::LinkType;
+use crate::model::Model;
+use crate::model::Node;
+use crate::model::NodeType;
+use crate::model::WorkflowPrompt;
+use crate::model::{self};
+use crate::ui::View;
+use crate::utils::Aro;
+use crate::utils::Arw;
+use slint::ComponentHandle;
+use slint::Weak;
+use std::collections::HashMap;
+use std::fs::File;
+use std::sync::mpsc::Receiver;
+use std::sync::mpsc::Sender;
 
 mod command_palette;
 mod graph;
@@ -31,6 +39,18 @@ pub enum Event {
     Save,
     SaveAs,
     OpenFile,
+    SetField {
+        node_idx: usize,
+        input: String,
+        ty: String,
+        value: String,
+    },
+    Render,
+    SetNodeOutput {
+        node: usize,
+        output: String,
+    },
+    FocusPalette,
 }
 
 trait Controller {
@@ -49,6 +69,8 @@ impl Mediator {
         let (tx, rx) = std::sync::mpsc::channel();
 
         populate_available_nodes(&mut model);
+
+        model.spawn_client(tx.clone());
 
         let model = Arw::new(model);
         let ro_model = Aro::from(model.clone());
@@ -99,7 +121,10 @@ impl Mediator {
                 AddNode(ref ty) => {
                     let mut model = self.model.write();
                     if let Some(project) = model.tabs_mut().selected_project_mut() {
-                        project.graph_mut().add_node(ty.clone());
+                        let n = project.get_available_node(ty).unwrap();
+                        let fields = n.fields.into_iter().collect::<Vec<_>>();
+
+                        project.graph_mut().add_node(ty.clone(), fields);
                     }
                     notify!(Graph);
                 }
@@ -183,6 +208,69 @@ impl Mediator {
                     }
                     notify!(Graph);
                 }
+                SetField {
+                    node_idx,
+                    ref input,
+                    ref ty,
+                    ref value,
+                } => {
+                    use crate::model::TY_FLOAT;
+                    use crate::model::TY_INT;
+                    use crate::model::TY_SELECT;
+                    use crate::model::TY_STRING;
+
+                    let mut model = self.model.write();
+                    let Some(project) = model.tabs_mut().selected_project_mut() else {
+                        continue;
+                    };
+
+                    let Some(state) = project.graph_mut().get_state_mut(node_idx, input) else {
+                        continue;
+                    };
+
+                    match ty.as_str() {
+                        TY_STRING | TY_SELECT => state.set_text(value.clone()),
+                        TY_INT => {
+                            let _ = value.parse().map(|x| state.set_int(x));
+                        }
+                        TY_FLOAT => {
+                            let _ = value.parse().map(|x| state.set_float(x));
+                        }
+                        _ => {}
+                    }
+                }
+                Render => {
+                    let mut model = self.model.write();
+                    let Some(project) = model.tabs_mut().selected_project_mut() else {
+                        continue;
+                    };
+
+                    let available_nodes = project.available_nodes();
+                    let wf = WorkflowPrompt::from_graph(available_nodes, project.graph())
+                        .with_client_id(model.backend().client_id());
+
+                    println!("\n");
+                    println!("{:#?}", &wf);
+
+                    let _ = model.backend().compute_graph(&wf);
+                }
+                SetNodeOutput { node, ref output } => {
+                    println!("Output for node idx {} is at path {}", node, output);
+
+                    let mut model = self.model.write();
+                    let image = model.backend().fetch_image(output.into());
+
+                    if let Some(project) = model.tabs_mut().selected_project_mut() {
+                        let node = project.graph_mut().get_node_mut(node).unwrap();
+                        node.image = image.ok();
+                        notify!(Graph);
+                    };
+                }
+                FocusPalette => {
+                    self.ui
+                        .upgrade_in_event_loop(move |view| view.invoke_focus())
+                        .unwrap();
+                }
             }
         }
     }
@@ -251,6 +339,7 @@ fn populate_available_nodes(model: &mut Model) {
                     ("Text".into(), "TXT".into()),
                     ("Image".into(), "IMG".into()),
                 ],
+                fields: vec![],
                 name,
                 description: "Node of type A".into(),
                 category: "Dummy".into(),
@@ -262,6 +351,7 @@ fn populate_available_nodes(model: &mut Model) {
             Node {
                 inputs: vec![("Image".into(), "IMG".into())],
                 outputs: vec![],
+                fields: vec![],
                 name,
                 description: "Node of type B".into(),
                 category: "Dummy".into(),
@@ -273,6 +363,7 @@ fn populate_available_nodes(model: &mut Model) {
             Node {
                 inputs: vec![],
                 outputs: vec![("Text".into(), "TXT".into()), ("Text".into(), "TXT".into())],
+                fields: vec![],
                 name,
                 description: "Node of type C".into(),
                 category: "Dummy".into(),
@@ -291,14 +382,21 @@ fn populate_available_nodes(model: &mut Model) {
                         Node {
                             inputs: v
                                 .input
-                                .into_iter()
-                                .map(|(lbl, ty)| (lbl, LinkType(ty)))
+                                .iter()
+                                .filter(|(_, ty)| ty.is_connection())
+                                .map(|(lbl, ty)| (lbl.clone(), LinkType(ty.ty())))
                                 .collect(),
                             outputs: v
                                 .output_name
                                 .into_iter()
                                 .zip(v.output)
                                 .map(|(lbl, ty)| (lbl, LinkType(ty)))
+                                .collect(),
+                            fields: v
+                                .input
+                                .iter()
+                                .filter(|(_, ty)| !ty.is_connection())
+                                .map(|(lbl, ty)| (lbl.clone(), ty.clone()))
                                 .collect(),
                             name: v.display_name,
                             description: v.description,
@@ -309,6 +407,7 @@ fn populate_available_nodes(model: &mut Model) {
                 .collect()
         })
         .unwrap_or(dummy_nodes);
+
     if let Some(project) = model.tabs_mut().selected_project_mut() {
         project.set_available_nodes(available_nodes);
     }

@@ -1,0 +1,77 @@
+import { LineEdit, TextEdit, StandardListView } from "std-widgets.slint";
+import { Field, FieldType, NodeLogic } from "state.slint";
+
+component IntInput inherits VerticalLayout {
+    in property<string> text;
+    in property<string> default-value;
+    in property<InputType> input-type : InputType.number;
+
+    callback edited(string);
+    
+    Text {
+        text: parent.text;
+    }
+
+    LineEdit {
+        width: 100%;
+        height: 20px;
+        font-size: 14px;
+        input-type: parent.input-type;
+        text: parent.default-value;
+
+        edited(text) => {
+            parent.edited(text);
+        }
+    }
+}
+
+export component NodeInput inherits HorizontalLayout {
+    in property<int> node-idx;
+    in property<Field> field-meta;
+
+    if field-meta.ty == FieldType.select: StandardListView {
+        width: 100%;
+        height: 100px;
+        model: field-meta.options;
+        current-item: field-meta.default_option;
+
+        current-item-changed(idx) => {
+            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, self.model[idx].text);
+        }
+    }
+
+    if field-meta.ty == FieldType.string-input: TextEdit {
+        width: 100%;
+        height: 150px;
+        font-size: 14px;
+
+        text: field-meta.default_text;
+
+        edited(text) => {
+            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+        }
+    }
+
+    if field-meta.ty == FieldType.int-input: IntInput {
+        text: field-meta.name;
+        default-value: field-meta.default_value;
+
+        edited(text) => {
+            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+        }
+    }
+
+    if field-meta.ty == FieldType.float-input: IntInput {
+        text: field-meta.name;
+        default-value: field-meta.default-value;
+        input-type: InputType.decimal;
+
+        edited(text) => {
+            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+        }
+    }
+
+    if field-meta.ty == FieldType.image-output: Image {
+        source: field-meta.image;
+    }
+}

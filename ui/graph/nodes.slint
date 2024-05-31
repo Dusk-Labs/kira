@@ -1,9 +1,8 @@
-import { LinkData, NodeData, FloatingLinkData, FloatingState } from "state.slint";
-import { LinkLayout, LinkLogic } from "links.slint";
+import { StandardListView, TextEdit, LineEdit } from "std-widgets.slint";
 
-export global NodeLogic {
-    callback move_node(int, length, length);
-}
+import { LinkData, NodeData, FloatingLinkData, FloatingState, FieldType, NodeLogic } from "state.slint";
+import { LinkLayout, LinkLogic } from "links.slint";
+import { NodeInput } from "inputs.slint";
 
 export component Node inherits Rectangle {
     in-out property <NodeData> n;
@@ -13,12 +12,14 @@ export component Node inherits Rectangle {
     in property <float> zoom;
     in property <float> offset-x;
     in property <float> offset-y;
+
     x: (n.x + offset-x*1px) * zoom;
     y: (n.y - 10px + offset-y*1px) * zoom;
     background: #0f0f0f;
     width: n.width * zoom;
     height: l.preferred-height;
     border-radius: 3px * zoom;
+
     TouchArea {
         moved => {
             if (self.pressed) {
@@ -34,6 +35,9 @@ export component Node inherits Rectangle {
                     n.x + (self.mouse-x - self.pressed-x) / zoom,
                     n.y + (self.mouse-y - self.pressed-y) / zoom,
                 );
+
+                // Refocus command palette
+                NodeLogic.focus_callback();
             } 
         }
 
@@ -55,6 +59,7 @@ export component Node inherits Rectangle {
                         border-bottom-right-radius: 5px * zoom;
                         border-top-right-radius: 5px * zoom;
                         background: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty) : LinkLayout.colorFromstring(input.ty).darker(1);
+
                         input_ta := TouchArea {
                             clicked => {
                                 if floating.floating_state == FloatingState.none {
@@ -105,6 +110,12 @@ export component Node inherits Rectangle {
                 }
             }
         }
+
+        for input[input_idx] in n.input_fields: NodeInput {
+            node_idx: node_idx;
+            field_meta: input;
+        }
+
         Rectangle {
             Text {
                 color: white;

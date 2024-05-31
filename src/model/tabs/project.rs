@@ -1,5 +1,9 @@
-use self::graph::{Graph, LinkType, NodeType};
-use simsearch::{SearchOptions, SimSearch};
+use self::graph::Graph;
+use self::graph::LinkType;
+use self::graph::NodeType;
+use crate::model::backend::node::NodeField;
+use simsearch::SearchOptions;
+use simsearch::SimSearch;
 use std::collections::HashMap;
 
 pub mod graph;
@@ -21,22 +25,32 @@ impl Project {
             file_path: None,
         }
     }
+
     pub fn graph(&self) -> &Graph {
         &self.graph
     }
+
     pub fn graph_mut(&mut self) -> &mut Graph {
         &mut self.graph
     }
+
     pub fn file_path(&self) -> Option<&str> {
         self.file_path.as_deref()
     }
+
     pub fn set_file_path(&mut self, path: String) {
         self.file_path = Some(path);
     }
+
     pub fn set_available_nodes(&mut self, nodes: HashMap<NodeType, Node>) {
         self.available_nodes = nodes;
         self.build_index();
     }
+
+    pub fn available_nodes(&self) -> &HashMap<NodeType, Node> {
+        &self.available_nodes
+    }
+
     pub fn search_available_nodes(&self, query: &str) -> Vec<(NodeType, Node)> {
         let ids = self.available_node_index.search(query);
         ids.into_iter()
@@ -48,9 +62,11 @@ impl Project {
             })
             .collect()
     }
+
     pub fn get_available_node(&self, id: &NodeType) -> Option<Node> {
         self.available_nodes.get(id).cloned()
     }
+
     fn build_index(&mut self) {
         self.available_node_index = Self::empty_index();
 
@@ -59,6 +75,7 @@ impl Project {
                 .insert(k.clone(), &v.search_string());
         }
     }
+
     fn empty_index() -> SimSearch<NodeType> {
         SimSearch::new_with(SearchOptions::new().threshold(0.65).levenshtein(false))
     }
@@ -68,6 +85,7 @@ impl Project {
 pub struct Node {
     pub inputs: Vec<(String, LinkType)>,
     pub outputs: Vec<(String, LinkType)>,
+    pub fields: Vec<(String, NodeField)>,
     pub name: String,
     pub description: String,
     pub category: String,
