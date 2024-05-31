@@ -973,6 +973,7 @@ dependencies = [
 [[package]]
 name = "const-field-offset"
 version = "0.1.5"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "const-field-offset-macro",
  "field-offset",
@@ -981,6 +982,7 @@ dependencies = [
 [[package]]
 name = "const-field-offset-macro"
 version = "0.1.5"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2354,13 +2356,14 @@ dependencies = [
 [[package]]
 name = "i-slint-backend-linuxkms"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "calloop",
  "drm",
  "gbm",
  "gbm-sys",
  "glutin",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core",
  "i-slint-renderer-femtovg",
  "input",
@@ -2372,17 +2375,19 @@ dependencies = [
 [[package]]
 name = "i-slint-backend-selector"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "cfg-if",
  "i-slint-backend-linuxkms",
  "i-slint-backend-winit",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core",
 ]
 
 [[package]]
 name = "i-slint-backend-winit"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "accesskit",
  "accesskit_winit",
@@ -2395,7 +2400,7 @@ dependencies = [
  "derive_more",
  "glutin",
  "glutin-winit",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core",
  "i-slint-core-macros",
  "i-slint-renderer-femtovg",
@@ -2417,16 +2422,6 @@ dependencies = [
 [[package]]
 name = "i-slint-common"
 version = "1.6.0"
-dependencies = [
- "cfg-if",
- "derive_more",
- "fontdb",
- "libloading 0.8.3",
-]
-
-[[package]]
-name = "i-slint-common"
-version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "98770ce4f006a76efa0c728857a29fdca2dcad5dc0442f0aa786a28bbf9dcab1"
 dependencies = [
@@ -2437,28 +2432,14 @@ dependencies = [
 ]
 
 [[package]]
-name = "i-slint-compiler"
+name = "i-slint-common"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
- "by_address",
- "codemap",
- "codemap-diagnostic",
- "css-color-parser2",
+ "cfg-if",
  "derive_more",
- "i-slint-common 1.6.0",
- "itertools 0.12.1",
- "linked_hash_set",
- "lyon_extra",
- "lyon_path",
- "num_enum",
- "once_cell",
- "proc-macro2",
- "quote",
- "rowan",
- "smol_str",
- "strum",
- "thiserror",
- "url",
+ "fontdb",
+ "libloading 0.8.3",
 ]
 
 [[package]]
@@ -2492,8 +2473,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "i-slint-compiler"
+version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
+dependencies = [
+ "by_address",
+ "codemap",
+ "codemap-diagnostic",
+ "css-color-parser2",
+ "derive_more",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "itertools 0.12.1",
+ "linked_hash_set",
+ "lyon_extra",
+ "lyon_path",
+ "num_enum",
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "rowan",
+ "smol_str",
+ "strum",
+ "thiserror",
+ "url",
+]
+
+[[package]]
 name = "i-slint-core"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "auto_enums",
  "bitflags 2.5.0",
@@ -2504,7 +2512,7 @@ dependencies = [
  "derive_more",
  "euclid",
  "fontdue",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core-macros",
  "image 0.24.9",
  "integer-sqrt",
@@ -2538,6 +2546,7 @@ dependencies = [
 [[package]]
 name = "i-slint-core-macros"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "quote",
  "syn 2.0.66",
@@ -2546,6 +2555,7 @@ dependencies = [
 [[package]]
 name = "i-slint-renderer-femtovg"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "cfg-if",
  "const-field-offset",
@@ -2555,7 +2565,7 @@ dependencies = [
  "dwrote",
  "femtovg",
  "glow",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core",
  "i-slint-core-macros",
  "imgref",
@@ -2576,6 +2586,7 @@ dependencies = [
 [[package]]
 name = "i-slint-renderer-skia"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "bytemuck",
  "cfg-if",
@@ -2588,7 +2599,7 @@ dependencies = [
  "foreign-types 0.5.0",
  "glow",
  "glutin",
- "i-slint-common 1.6.0",
+ "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "i-slint-core",
  "i-slint-core-macros",
  "lyon_path",
@@ -4559,6 +4570,7 @@ dependencies = [
 [[package]]
 name = "slint"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "const-field-offset",
  "i-slint-backend-selector",
@@ -4586,8 +4598,9 @@ dependencies = [
 [[package]]
 name = "slint-macros"
 version = "1.6.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
- "i-slint-compiler 1.6.0",
+ "i-slint-compiler 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
  "proc-macro2",
  "quote",
  "spin_on",
@@ -5454,6 +5467,7 @@ dependencies = [
 [[package]]
 name = "vtable"
 version = "0.2.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "const-field-offset",
  "portable-atomic",
@@ -5464,6 +5478,7 @@ dependencies = [
 [[package]]
 name = "vtable-macro"
 version = "0.2.0"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "proc-macro2",
  "quote",

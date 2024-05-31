@@ -22,8 +22,8 @@ tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.8.0", features = ["v4", "v7"] }
 
-#slint = { git = "https://github.com/vgarleanu/slint", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
-slint = { path = "../slint/api/rs/slint", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
+# TODO: Point to slint main once https://github.com/slint-ui/slint/pull/5320 has been merged.
+slint = { git = "https://github.com/vgarleanu/slint", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false, branch = "fix/macos-menu-bar" }
 
 [build-dependencies]
 slint-build = "1.6.0"
