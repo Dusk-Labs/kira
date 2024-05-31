@@ -1,5 +1,5 @@
 [package]
-name = "kira"
+name = "Kira"
 version = "0.1.0"
 authors = ["IGI-111 <igi-111@protonmail.com>", "Valerian Garleanu <valerian@dusklabs.io>"]
 edition = "2021"
@@ -10,17 +10,20 @@ async-trait = "0.1.80"
 ezsockets = "0.6.2"
 image = "0.25.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
+muda = "0.13.5"
 native-dialog = "0.7.0"
 reqwest = { version = "0.12.4", features = ["blocking", "json"] }
 serde = { version = "1.0.199", features = ["derive"] }
 serde_json = { version = "1.0.116", features = ["preserve_order", "indexmap"] }
 serde_path_to_error = "0.1.16"
 simsearch = "0.2.5"
-slint = { version = "1.6.0", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
 tokio = { version = "1.37.0", features = ["full"] }
 tracing = "0.1.40"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 uuid = { version = "1.8.0", features = ["v4", "v7"] }
+
+#slint = { git = "https://github.com/vgarleanu/slint", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
+slint = { path = "../slint/api/rs/slint", features = [ "std", "renderer-femtovg", "renderer-software", "accessibility", "compat-1-2", "backend-winit" ], default-features = false }
 
 [build-dependencies]
 slint-build = "1.6.0"
