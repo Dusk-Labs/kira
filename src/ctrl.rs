@@ -267,7 +267,9 @@ impl Mediator {
                     };
                 }
                 FocusPalette => {
-                    self.ui.upgrade_in_event_loop(move |view| view.invoke_focus()).unwrap();
+                    self.ui
+                        .upgrade_in_event_loop(move |view| view.invoke_focus())
+                        .unwrap();
                 }
             }
         }
