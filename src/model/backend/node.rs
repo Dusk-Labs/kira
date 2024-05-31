@@ -210,7 +210,7 @@ pub struct IntInput {
     pub max: f32,
     #[serde(default = "float_step")]
     pub step: f32,
-    #[serde(skip)]
+    #[serde(default = "float_step")]
     pub state: f32,
 }
 
@@ -222,7 +222,7 @@ pub struct FloatInput {
     pub max: f32,
     #[serde(default = "float_step")]
     pub step: f32,
-    #[serde(skip)]
+    #[serde(default = "float_step")]
     pub state: f32,
 }
 
@@ -231,7 +231,7 @@ pub struct StringInput {
     #[serde(default = "bool_false")]
     pub multiline: bool,
     pub default: Option<String>,
-    #[serde(skip)]
+    #[serde(default)]
     pub state: String,
 }
 

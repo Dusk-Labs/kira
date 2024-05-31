@@ -4,16 +4,12 @@ use serde::Serialize;
 use slint::SharedString;
 use std::collections::HashMap;
 
-pub type NodeId = usize;
-pub type FieldStates = HashMap<NodeId, Vec<(String, NodeField)>>;
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Graph {
     nodes: Vec<NodeInstance>,
     links: Vec<Link>,
     zoom: f32,
     offset: (f32, f32),
-    field_states: FieldStates,
 }
 
 impl Graph {
@@ -23,7 +19,6 @@ impl Graph {
             links: vec![],
             zoom: 2.,
             offset: (0., 0.),
-            field_states: FieldStates::new(),
         }
     }
 
@@ -47,15 +42,15 @@ impl Graph {
         self.nodes.push(NodeInstance {
             ty: id,
             pos: (20. - self.offset.0, 20. - self.offset.1),
+            state,
             image: None,
         });
-
-        self.field_states.insert(self.nodes.len() - 1, state);
     }
 
-    pub fn get_state_mut(&mut self, id: NodeId, input: &str) -> Option<&mut NodeField> {
-        self.field_states
-            .get_mut(&id)?
+    pub fn get_state_mut(&mut self, id: usize, input: &str) -> Option<&mut NodeField> {
+        self.nodes
+            .get_mut(id)?
+            .state
             .iter_mut()
             .find(|(lbl, _)| lbl == input)
             .map(|(_, field)| field)
@@ -79,8 +74,8 @@ impl Graph {
         &self.nodes
     }
 
-    pub fn get_state(&self, id: NodeId) -> Option<&Vec<(String, NodeField)>> {
-        self.field_states.get(&id)
+    pub fn get_state(&self, id: usize) -> Option<&Vec<(String, NodeField)>> {
+        Some(&self.nodes.get(id)?.state)
     }
 
     pub fn get_node(&self, idx: usize) -> Option<&NodeInstance> {
@@ -100,6 +95,7 @@ impl Graph {
 pub struct NodeInstance {
     pub ty: NodeType,
     pub pos: (f32, f32),
+    pub state: Vec<(String, NodeField)>,
     #[serde(skip)]
     pub image: Option<image::RgbImage>,
 }
