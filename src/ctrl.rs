@@ -1,7 +1,14 @@
+mod command_palette;
+mod graph;
+mod menu;
+mod tabs;
+
 use self::command_palette::CommandPalette;
 use self::graph::Graph;
 use self::menu::Menu;
 use self::tabs::Tabs;
+use self::menu::darwin::DarwinMenu;
+
 use crate::model::Link;
 use crate::model::LinkType;
 use crate::model::Model;
@@ -10,19 +17,19 @@ use crate::model::NodeType;
 use crate::model::WorkflowPrompt;
 use crate::model::{self};
 use crate::ui::View;
+use crate::ui::Platform;
+use crate::ui::Metadata;
 use crate::utils::Aro;
 use crate::utils::Arw;
+
 use slint::ComponentHandle;
 use slint::Weak;
+
 use std::collections::HashMap;
 use std::fs::File;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
-
-mod command_palette;
-mod graph;
-mod menu;
-mod tabs;
+use std::env;
 
 #[derive(Debug)]
 pub enum Event {
@@ -51,6 +58,7 @@ pub enum Event {
         output: String,
     },
     FocusPalette,
+    TogglePalette,
 }
 
 trait Controller {
@@ -76,9 +84,19 @@ impl Mediator {
         let ro_model = Aro::from(model.clone());
 
         Menu::setup(ro_model.clone(), ui, tx.clone());
+        DarwinMenu::setup(ro_model.clone(), ui, tx.clone());
         Tabs::setup(ro_model.clone(), ui, tx.clone());
         Graph::setup(ro_model.clone(), ui, tx.clone());
         CommandPalette::setup(ro_model.clone(), ui, tx.clone());
+
+        let platform = match env::consts::OS {
+            "macos" => crate::ui::Platform::Darwin,
+            "linux" => crate::ui::Platform::Linux,
+            "windows" => crate::ui::Platform::Windows,
+            _ => crate::ui::Platform::Other,
+        };
+
+        ui.global::<Metadata>().set_platform(platform);
 
         Self {
             rx,
@@ -270,6 +288,12 @@ impl Mediator {
                     self.ui
                         .upgrade_in_event_loop(move |view| view.invoke_focus())
                         .unwrap();
+                }
+                TogglePalette => {
+                    self.ui.upgrade_in_event_loop(move |view| {
+                        view.invoke_focus();
+                        view.invoke_toggle_palette();
+                    }).unwrap();
                 }
             }
         }

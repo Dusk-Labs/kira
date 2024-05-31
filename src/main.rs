@@ -5,9 +5,10 @@ mod ui {
     slint::include_modules!();
 }
 
+use slint::ComponentHandle;
+
 use ctrl::Mediator;
 use model::Model;
-use slint::ComponentHandle;
 use ui::View;
 
 fn main() -> Result<(), slint::PlatformError> {
