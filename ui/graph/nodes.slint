@@ -95,7 +95,7 @@ component ConnectionEdge inherits HorizontalLayout {
             }
         }
 
-        VerticalLayout{
+        VerticalLayout {
             alignment: LayoutAlignment.center;
             Image {
                 source: left ? @image-url("../../assets/left-chevron.svg") : @image-url("../../assets/right-chevron.svg");
@@ -161,7 +161,7 @@ export component Node inherits Rectangle {
 
     l := VerticalLayout {
         padding-top: 10px * zoom;
-        padding-bottom: 5px * zoom;
+        padding-bottom: 8px * zoom;
 
         NodeHeader {
             zoom: zoom;

@@ -29,6 +29,7 @@ export component Floating inherits Rectangle {
     in property <float> zoom;
     in property <float> offset-x;
     in property <float> offset-y;
+
     Path {
         stroke: LinkLayout.colorFromstring(floating.ty);
         viewbox-height: viewbox-height;
@@ -66,20 +67,40 @@ export component FloatingSlots inherits Rectangle {
     in property <float> zoom;
     in property <float> offset-x;
     in property <float> offset-y;
+
+    pure function is-right-facing() -> bool {
+        return floating.floating_state == FloatingState.src_attached;
+    }
+
+    function image() -> image {
+        if is-right-facing() {
+            return @image-url("../../assets/right-chevron.svg");
+        } else {
+            return @image-url("../../assets/left-chevron.svg");
+        }
+    }
+
     Rectangle {
         x: floating.floating_state == FloatingState.src_attached
             ? (LinkLayout.srcX(nodes[floating.node]) + offset-x)*1px * zoom
             : (LinkLayout.dstX(nodes[floating.node]) + offset-x)*1px * zoom;
+
         y: floating.floating_state == FloatingState.src_attached
             ? (LinkLayout.srcY(nodes[floating.node], floating.node_slot) + offset-y)*1px * zoom
             : (LinkLayout.dstY(nodes[floating.node], floating.node_slot) + offset-y)*1px * zoom;
-        width: 10px * zoom;
-        height: 10px * zoom;
-        border-radius: 5px * zoom;
-        border-bottom-left-radius: (floating.floating_state == FloatingState.src_attached ? 5px : 0px) * zoom;
-        border-top-left-radius: (floating.floating_state == FloatingState.src_attached ? 5px : 0px) * zoom;
-        border-bottom-right-radius: (floating.floating_state == FloatingState.src_attached ? 0px : 5px) * zoom;
-        border-top-right-radius: (floating.floating_state == FloatingState.src_attached ? 0px : 5px) * zoom;
-        background: LinkLayout.colorFromstring(floating.ty);
+
+        width: 11px * zoom;
+        height: 8px * zoom;
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+
+            Image {
+                source: root.image();
+                colorize: LinkLayout.colorFromstring(floating.ty);
+                width: 11px * zoom;
+                height: 8px * zoom;
+            }
+        }
     }
 }

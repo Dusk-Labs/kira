@@ -49,6 +49,10 @@ export component Graph inherits Rectangle {
             }
         }
         pointer-event(event) => {
+            if event.kind != PointerEventKind.move {
+                debug(event);
+            }
+
             if event.kind == PointerEventKind.up {
                 NodeLogic.focus_callback();
                 GraphLogic.set_offset(
@@ -58,6 +62,7 @@ export component Graph inherits Rectangle {
             } 
         }
     }
+
     Flickable {
         interactive: false;
         viewport-height: 10000000cm;
@@ -66,7 +71,6 @@ export component Graph inherits Rectangle {
         viewport-x: 0;
         flicked => { 
             GraphLogic.set_zoom(1 - self.viewport-y/20cm);
-            // debug(root.zoom);
         }
         Rectangle {}
     }

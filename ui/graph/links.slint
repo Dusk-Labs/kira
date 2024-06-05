@@ -18,19 +18,22 @@ export global LinkLayout {
             #A676F5
         }
     }
+
     pure public function srcX(src: NodeData) -> float {
-        return (src.x + src.width - 10px) / 1px;
+        return (src.x + src.width - 23px) / 1px;
     }
+
     pure public function srcY(src: NodeData, src_slot: int) -> float {
-        return src.y / 1px + 15 * src_slot;
+        return (src.y + 10px + 5px + 4px + 5px + 16px) / 1px + 16 * src_slot;
     }
+
     pure public function dstX(dst: NodeData) -> float {
-        return dst.x / 1px;
+        return (dst.x + 12px) / 1px;
     }
+
     pure public function dstY(dst: NodeData, dst_slot: int) -> float {
-        return dst.y / 1px + 15 * dst_slot;
+        return (dst.y + 10px + 5px + 4px + 5px + 16px) / 1px + 16 * dst_slot;
     }
-    
 }
 
 export component Link inherits Rectangle {
@@ -74,24 +77,40 @@ export component LinkSlots inherits Rectangle {
     in property <float> offset-y;
 
     Rectangle {
-        x: (LinkLayout.srcX(nodes[link.src]) + offset-x) * 1px * zoom;
+        x: ((LinkLayout.srcX(nodes[link.src]) + offset-x) * 1px) * zoom;
         y: (LinkLayout.srcY(nodes[link.src], link.src_slot) + offset-y) * 1px * zoom;
-        width: 10px * zoom;
-        height: 10px * zoom;
-        border-bottom-left-radius: 5px * zoom;
-        border-top-left-radius: 5px * zoom;
-        background: LinkLayout.colorFromstring(link.ty);
+        width: 11px * zoom;
+        height: 8px * zoom;
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+
+            Image {
+                source: @image-url("../../assets/right-chevron.svg");
+                colorize: LinkLayout.colorFromstring(link.ty).brighter(0.3);
+                width: 11px * zoom;
+                height: 8px * zoom;
+            }
+        }
+        
     }
 
     Rectangle {
         x: (LinkLayout.dstX(nodes[link.dst]) + offset-x) * 1px * zoom;
         y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot) + offset-y) * 1px * zoom;
-        width: 10px * zoom;
-        height: 10px * zoom;
-        border-bottom-right-radius: 5px * zoom;
-        border-top-right-radius: 5px * zoom;
-        background: LinkLayout.colorFromstring(link.ty);
+        width: 11px * zoom;
+        height: 8px * zoom;
+
+        VerticalLayout {
+            alignment: LayoutAlignment.center;
+
+            Image {
+                source: @image-url("../../assets/left-chevron.svg");
+                colorize: LinkLayout.colorFromstring(link.ty).brighter(0.3);
+                width: 11px * zoom;
+                height: 8px * zoom;
+            }
+        }
     }
-    
 }
 

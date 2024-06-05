@@ -1,7 +1,7 @@
-import { TextEdit } from "std-widgets.slint";
 import { Field, FieldType, NodeLogic } from "state.slint";
 import { LineEdit } from "../core_widgets/lineedit-base.slint";
 import { Dropdown } from "../core_widgets/combobox.slint";
+import { TextEdit } from "../core_widgets/textedit-base.slint";
 import "../../assets/AktivGrotesk-Regular.ttf";
 
 component SvgButton inherits VerticalLayout {
@@ -154,12 +154,41 @@ component IntInput inherits Rectangle {
     }
 }
 
+component TextInput inherits Rectangle {
+    in property<float> zoom;
+    in property<string> text;
+    in property<string> label;
+    callback edited <=> edit.edited;
+
+    background: #141415;
+    border-radius: 7px * zoom;
+    clip: true;
+
+    VerticalLayout {
+        spacing: 10px * zoom;
+        padding: 12px * zoom;
+
+        Text {
+            font-family: "Aktiv Grotesk";
+            font-size: 12px * zoom;
+            font-weight: 500;
+            text: label;
+        }
+
+        edit := TextEdit {
+            height: 150px;
+            font-size: 11px * zoom;
+            zoom: zoom;
+
+            text: text;
+        }
+    }
+}
+
 export component NodeInput inherits HorizontalLayout {
     in property<int> node-idx;
     in property<Field> field-meta;
     in property<float> zoom;
-
-    width: 100%;
 
     function update_field(text: string) {
         NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
@@ -194,12 +223,10 @@ export component NodeInput inherits HorizontalLayout {
         }
     }
 
-    if field-meta.ty == FieldType.string-input: TextEdit {
-        width: 100%;
-        height: 150px;
-        font-size: 14px;
-
+    if field-meta.ty == FieldType.string-input: TextInput {
         text: field-meta.default_text;
+        zoom: zoom;
+        label: field-meta.name;
 
         edited(text) => {
             root.update_field(text);
@@ -213,7 +240,7 @@ export component NodeInput inherits HorizontalLayout {
         padding-right-offset: 3px * zoom;
 
         states [
-            is-seed when root.isSeed() :{
+            is-seed when root.isSeed() : {
                 input-width: 50px * zoom;
                 show-randomize: true;
                 padding-right-offset: 0px;
@@ -261,7 +288,15 @@ export component NodeInput inherits HorizontalLayout {
         }
     }
 
-    if field-meta.ty == FieldType.image-output: Image {
-        source: field-meta.image;
+    if field-meta.ty == FieldType.image-output: Rectangle {
+        clip: true;
+        border-radius: 6px * zoom;
+
+        Image {
+            source: field-meta.image;
+            image-fit: ImageFit.contain;
+            width: 100%;
+            height: 100%;
+        }
     }
 }
