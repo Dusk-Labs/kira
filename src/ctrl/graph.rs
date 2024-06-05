@@ -52,11 +52,15 @@ impl Controller for Graph {
             RemoveLink(..) | AddLink(..) => {
                 Links::notify(ui, model, evt);
             }
-            AddNode(..) | SetField { .. } => {
+            AddNode(..)
+            | SetField { .. }
+            | SetFieldDec { .. }
+            | SetFieldInc { .. }
+            | SetFieldRandom { .. }
+            | SetNodeOutput { .. } => {
                 Nodes::notify(ui, model, evt);
             }
-            Save | SaveAs | SetCommandSearch(..) | Render => {}
-            _ => {}
+            Save | SaveAs | SetCommandSearch(..) | Render | TogglePalette | FocusPalette => {}
         }
     }
 }

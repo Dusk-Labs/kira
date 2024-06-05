@@ -9,7 +9,6 @@ use crate::ui::View;
 use crate::ui::{self};
 use slint::ComponentHandle;
 use slint::SharedString;
-use slint::StandardListViewItem;
 use slint::VecModel;
 use std::sync::mpsc::Sender;
 
@@ -35,6 +34,39 @@ impl Controller for Nodes {
                         input: input.into(),
                         ty: ty.into(),
                         value: value.into(),
+                    })
+                    .unwrap();
+            });
+
+        let tx_clone = tx.clone();
+        ui.global::<ui::NodeLogic>()
+            .on_set_field_random(move |node_idx, input| {
+                tx_clone
+                    .send(Event::SetFieldRandom {
+                        node_idx: node_idx as _,
+                        input: input.into(),
+                    })
+                    .unwrap();
+            });
+
+        let tx_clone = tx.clone();
+        ui.global::<ui::NodeLogic>()
+            .on_set_field_inc(move |node_idx, input| {
+                tx_clone
+                    .send(Event::SetFieldInc {
+                        node_idx: node_idx as _,
+                        input: input.into(),
+                    })
+                    .unwrap();
+            });
+
+        let tx_clone = tx.clone();
+        ui.global::<ui::NodeLogic>()
+            .on_set_field_dec(move |node_idx, input| {
+                tx_clone
+                    .send(Event::SetFieldDec {
+                        node_idx: node_idx as _,
+                        input: input.into(),
                     })
                     .unwrap();
             });
@@ -92,7 +124,7 @@ fn refresh(ui: &View, model: &Model) {
                         .options()
                         .unwrap_or_default()
                         .into_iter()
-                        .map(|text| StandardListViewItem::from(text.as_str()))
+                        .map(|text| SharedString::from(text.as_str()))
                         .collect::<Vec<_>>();
 
                     let text = ty.text().unwrap_or_default();
@@ -104,9 +136,6 @@ fn refresh(ui: &View, model: &Model) {
                         default_text: SharedString::from(text.as_str()),
                         default_value: ty.float().unwrap_or(1.0),
                         default_option: ty.option().map(|x| x as i32).unwrap_or(-1),
-                        min: 0.0,
-                        max: f32::MAX,
-                        step: 1.0,
                         image: Default::default(),
                     }
                 })
@@ -127,9 +156,6 @@ fn refresh(ui: &View, model: &Model) {
                     default_text: "".into(),
                     default_value: 1.0,
                     default_option: -1,
-                    min: 0.0,
-                    max: 0.0,
-                    step: 1.0,
                     image: img,
                 });
             }
@@ -139,7 +165,7 @@ fn refresh(ui: &View, model: &Model) {
                 outputs: VecModel::from_slice(&outputs),
                 input_fields: VecModel::from_slice(&input_fields),
                 text: n.name.clone().into(),
-                width: 100.,
+                width: 280.,
                 x: ni.pos.0,
                 y: ni.pos.1,
             }

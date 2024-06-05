@@ -5,6 +5,8 @@ use serde::Serialize;
 use serde_json::json;
 use serde_json::Value;
 
+use rand::Rng;
+
 #[derive(Debug)]
 pub struct Node {
     pub input: IndexMap<String, NodeField>,
@@ -99,7 +101,7 @@ impl NodeField {
 
     pub fn text(&self) -> Option<String> {
         match self {
-            Self::StringInput(input) => Some(input.state.clone()),
+            Self::StringInput(input) => Some(input.state()),
             Self::Select { options, state } => state.and_then(|s| options.get(s)).cloned(),
             _ => None,
         }
@@ -107,8 +109,8 @@ impl NodeField {
 
     pub fn float(&self) -> Option<f32> {
         match self {
-            Self::FloatInput(input) => Some(input.state),
-            Self::IntInput(input) => Some(input.state),
+            Self::FloatInput(input) => Some(input.state()),
+            Self::IntInput(input) => Some(input.state()),
             _ => None,
         }
     }
@@ -124,7 +126,7 @@ impl NodeField {
     pub fn set_text(&mut self, text: String) {
         match self {
             Self::StringInput(ref mut input) => {
-                input.state = text;
+                input.set_state(text);
             }
             Self::Select {
                 ref options,
@@ -138,13 +140,13 @@ impl NodeField {
 
     pub fn set_int(&mut self, value: usize) {
         if let Self::IntInput(ref mut input) = self {
-            input.state = value as _;
+            input.set_state(value as _);
         }
     }
 
     pub fn set_float(&mut self, value: f32) {
         if let Self::FloatInput(ref mut input) = self {
-            input.state = value;
+            input.set_state(value);
         }
     }
 
@@ -189,9 +191,9 @@ impl NodeField {
         use NodeField::*;
 
         let value = match self {
-            IntInput(input) => json!(input.state as i32),
-            FloatInput(input) => json!(input.state),
-            StringInput(input) => json!(input.state),
+            IntInput(input) => json!(input.state() as i32),
+            FloatInput(input) => json!(input.state()),
+            StringInput(input) => json!(input.state()),
             BoolInput(input) => json!(input.default),
             Select { state, .. } => json!(state),
             Connection(_) => return None,
@@ -199,6 +201,32 @@ impl NodeField {
         };
 
         Some(value)
+    }
+
+    pub fn randomize(&mut self) {
+        if let NodeField::IntInput(input) = self {
+            input.randomize();
+        }
+    }
+
+    pub fn increment(&mut self) {
+        use NodeField::*;
+
+        match self {
+            IntInput(input) => input.increment(),
+            FloatInput(input) => input.increment(),
+            _ => {}
+        }
+    }
+
+    pub fn decrement(&mut self) {
+        use NodeField::*;
+
+        match self {
+            IntInput(input) => input.decrement(),
+            FloatInput(input) => input.decrement(),
+            _ => {}
+        }
     }
 }
 
@@ -210,8 +238,37 @@ pub struct IntInput {
     pub max: f32,
     #[serde(default = "float_step")]
     pub step: f32,
-    #[serde(default = "float_step")]
-    pub state: f32,
+    #[serde(default)]
+    state: Option<f32>,
+}
+
+impl IntInput {
+    pub fn state(&self) -> f32 {
+        self.state.unwrap_or(self.default)
+    }
+
+    pub fn set_state(&mut self, state: f32) {
+        if state > self.max {
+            self.state = Some(self.max);
+        } else if state < self.min {
+            self.state = Some(self.min)
+        } else {
+            self.state = Some(state);
+        }
+    }
+
+    pub fn randomize(&mut self) {
+        let state = rand::thread_rng().gen_range(self.min..self.max).trunc();
+        self.state = Some(state);
+    }
+
+    pub fn increment(&mut self) {
+        self.state = Some(self.max.min(self.state() + self.step));
+    }
+
+    pub fn decrement(&mut self) {
+        self.state = Some(self.min.max(self.state() - self.step));
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -220,10 +277,34 @@ pub struct FloatInput {
     pub min: f32,
     #[serde(default = "f32_max")]
     pub max: f32,
-    #[serde(default = "float_step")]
+    #[serde(default = "float_step_0_1")]
     pub step: f32,
-    #[serde(default = "float_step")]
-    pub state: f32,
+    #[serde(default)]
+    state: Option<f32>,
+}
+
+impl FloatInput {
+    pub fn state(&self) -> f32 {
+        self.state.unwrap_or(self.default)
+    }
+
+    pub fn set_state(&mut self, state: f32) {
+        if state > self.max {
+            self.state = Some(self.max);
+        } else if state < self.min {
+            self.state = Some(self.min)
+        } else {
+            self.state = Some(state);
+        }
+    }
+
+    pub fn increment(&mut self) {
+        self.state = Some(self.max.min(self.state() + self.step));
+    }
+
+    pub fn decrement(&mut self) {
+        self.state = Some(self.min.max(self.state() - self.step));
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -232,7 +313,20 @@ pub struct StringInput {
     pub multiline: bool,
     pub default: Option<String>,
     #[serde(default)]
-    pub state: String,
+    state: Option<String>,
+}
+
+impl StringInput {
+    pub fn state(&self) -> String {
+        self.state
+            .clone()
+            .or(self.default.clone())
+            .unwrap_or_default()
+    }
+
+    pub fn set_state(&mut self, state: String) {
+        self.state = Some(state);
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -270,7 +364,11 @@ struct RawInput {
 }
 
 fn float_step() -> f32 {
-    0.01
+    1.
+}
+
+fn float_step_0_1() -> f32 {
+    0.1
 }
 
 fn bool_false() -> bool {

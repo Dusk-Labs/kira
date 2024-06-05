@@ -1,0 +1,258 @@
+// Copyright © SixtyFPS GmbH <info@slint.dev>
+// SPDX-License-Identifier: GPL-3.0-only OR LicenseRef-Slint-Royalty-free-2.0 OR LicenseRef-Slint-Software-3.0
+
+import "../../assets/AktivGrotesk-Regular.ttf";
+
+global CupertinoPalette {
+    out property<color> accent-background: #321122;
+    out property<color> accent-foreground: #fefefe;
+    out property<color> dimmer: #000;
+    out property<color> control-background: accent-background;
+}
+
+export component ListItem {
+    in property <bool> is-selected;
+    in property <StandardListViewItem> item;
+    in property <length> padding-horizontal: 12px;
+    in property <bool> has-focus;
+    in property <bool> has-hover;
+    in property <bool> pressed;
+    in property <int> index;
+    in property <length> pressed-x;
+    in property <length> pressed-y;
+    in property <color> background;
+    in property <float> zoom : 1.0;
+
+    min-width: i-layout.min-width;
+    min-height: max(24px * zoom, i-layout.min-height);
+    vertical-stretch: 0;
+    horizontal-stretch: 1;
+
+    states [
+        has-focus when root.has-focus : {
+            i-background.background: root.background.brighter(0.2);
+        }
+        hover when root.has-hover : {
+            i-background.background: root.background.brighter(0.2);
+            i-text.color: #fff;
+        }
+    ]
+
+    i-layout := VerticalLayout {
+        padding-left: root.padding-horizontal;
+        padding-right: root.padding-horizontal;
+
+        i-background := Rectangle {
+            background: root.background;
+
+            HorizontalLayout {
+                spacing: 4px * zoom;
+                padding-left: 4px * zoom;
+                padding-right: 4px * zoom;
+
+                i-text := Text {
+                    text: root.item.text;
+                    color: #E4E4E4;
+                    font-size: 12px * zoom;
+                    font-weight: 500;
+                    font-family: "Aktiv Grotesk";
+                    vertical-alignment: center;
+                    horizontal-alignment: left;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+
+    @children
+}
+
+export component ComboBoxBase {
+    in property <[string]> model;
+    in property <bool> enabled <=> i-focus-scope.enabled;
+    out property <bool> has-focus: i-focus-scope.has-focus && root.enabled;
+    out property <bool> pressed <=> i-touch-area.pressed;
+    out property <bool> has-hover: i-touch-area.has-hover;
+    in-out property <int> current-index: 0;
+    in-out property <string> current-value: root.model[root.current-index];
+
+    callback selected(/* current-value */ string);
+    callback show-popup();
+
+    public function select(index: int) {
+        if !root.enabled {
+            return;
+        }
+        root.current-index = index;
+
+        if root.current-value != root.model[root.current-index] {
+            root.update-current-value();
+        }
+
+        root.selected(root.current-value);
+    }
+
+    public function move-selection-up() {
+        root.select(Math.max(root.current-index - 1, 0));
+    }
+
+    public function move-selection-down() {
+        root.select(Math.min(root.current-index + 1, root.model.length - 1));
+    }
+
+    function reset-current() {
+        root.current-index = 0;
+    }
+
+    function update-current-value() {
+        if root.current-index < 0 || root.current-index >= root.model.length {
+            root.current-value = "";
+            return;
+        }
+        root.current-value = root.model[root.current-index];
+    }
+
+    /*
+    changed model => {
+        root.reset-current();
+    }
+
+    changed current-index => {
+        root.update-current-value();
+    }
+    */
+
+    private property <length> scroll-delta: 2px;
+
+    forward-focus: i-focus-scope;
+
+    i-focus-scope := FocusScope {
+        key-pressed(event) => {
+            if (!self.enabled) {
+                return reject;
+            }
+            if (event.text == Key.UpArrow) {
+                root.move-selection-up();
+                return accept;
+            } else if (event.text == Key.DownArrow) {
+                root.move-selection-down();
+                return accept;
+            } else if (event.text == Key.Return) {
+                root.show-popup();
+            }
+            return reject;
+        }
+
+        i-touch-area := TouchArea {
+            enabled: root.enabled;
+
+            clicked => {
+                root.focus();
+                root.show-popup();
+            }
+
+            scroll-event(event) => {
+                if (event.delta-y < -root.scroll-delta) {
+                    root.move-selection-down();
+                    return accept;
+                }
+                if (event.delta-y > root.scroll-delta) {
+                    root.move-selection-up();
+                    return accept;
+                }
+                reject
+            }
+        }
+    }
+}
+
+export component Dropdown {
+    in property <[string]> model <=> i-base.model;
+    in property <bool> enabled <=> i-base.enabled;
+    out property <bool> has-focus <=> i-base.has-focus;
+    in-out property <int> current-index <=> i-base.current-index;
+    in-out property <string> current-value <=> i-base.current-value;
+
+    in property<float> zoom : 1.0;
+    in property<brush> background : #141415;
+
+    callback selected <=> i-base.selected;
+
+    background := Rectangle {
+        border-radius: 7px * zoom;
+        background: root.background;
+    }
+
+    HorizontalLayout {
+        padding-left: 5px * zoom;
+        padding-right: 6px * zoom;
+
+        alignment: LayoutAlignment.space-between;
+        width: 100%;
+
+        label := Rectangle {
+            background: root.background;
+
+            Text {
+                font-size: 10px * zoom;
+                font-weight: 400;
+                font-family: "Aktiv Grotesk";
+                text: root.current-value;
+                color: #E5E5E6;
+            }
+        }
+
+        chevron := Rectangle {
+            width: 8px * zoom;
+
+            Image {
+                height: chevron.width;
+                width: chevron.width;
+
+                colorize: #E5E5E6;
+                image-fit: contain;
+                source: @image-url("../../assets/down-chevron.png");
+            }
+        }
+    }
+
+    i-popup := PopupWindow {
+        x: 0;
+        y: background.height;
+        min-width: background.width;
+
+        Rectangle {
+            border-radius: 7px * zoom;
+            clip: true;
+
+            VerticalLayout {
+                for value[index] in root.model : ListItem {
+                    padding-horizontal: 0;
+                    item: { text: value };
+                    is-selected: index == root.current-index;
+                    has-hover: i-touch-area.has-hover;
+                    pressed: i-touch-area.pressed;
+                    pressed-x: i-touch-area.pressed-x;
+                    pressed-y: i-touch-area.pressed-y;
+                    background: root.background;
+                    zoom: zoom;
+
+                    i-touch-area := TouchArea {
+                        clicked => {
+                            i-base.select(index);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    i-base := ComboBoxBase {
+        width: 100%;
+        height: 100%;
+
+        show-popup => {
+            i-popup.show();
+        }
+    }
+}

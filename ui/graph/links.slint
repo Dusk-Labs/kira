@@ -11,11 +11,11 @@ export global LinkLogic {
 export global LinkLayout {
     pure public function colorFromstring(ty: string) -> color {
         if ty == "TXT" {
-            orange
+            #FA80C9
         } else if ty == "IMG"{
-            lightblue
+            #47FFDE
         } else {
-            red
+            #A676F5
         }
     }
     pure public function srcX(src: NodeData) -> float {
@@ -52,6 +52,7 @@ export component Link inherits Rectangle {
             x: (LinkLayout.srcX(nodes[link.src])+5+offset-x) * zoom;
             y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5 + offset-y) * zoom;
         }
+
         CubicTo { 
             control-1-x: (LinkLayout.srcX(nodes[link.src])+5 + 100 + offset-x) * zoom;
             control-1-y: (LinkLayout.srcY(nodes[link.src], link.src_slot)+5 + offset-y) * zoom; 
@@ -71,18 +72,20 @@ export component LinkSlots inherits Rectangle {
     in property <float> zoom;
     in property <float> offset-x;
     in property <float> offset-y;
+
     Rectangle {
-        x: (LinkLayout.srcX(nodes[link.src]) + offset-x)*1px * zoom;
-        y: (LinkLayout.srcY(nodes[link.src], link.src_slot) + offset-y)*1px * zoom;
+        x: (LinkLayout.srcX(nodes[link.src]) + offset-x) * 1px * zoom;
+        y: (LinkLayout.srcY(nodes[link.src], link.src_slot) + offset-y) * 1px * zoom;
         width: 10px * zoom;
         height: 10px * zoom;
         border-bottom-left-radius: 5px * zoom;
         border-top-left-radius: 5px * zoom;
         background: LinkLayout.colorFromstring(link.ty);
     }
+
     Rectangle {
-        x: (LinkLayout.dstX(nodes[link.dst]) + offset-x)*1px * zoom;
-        y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot) + offset-y)*1px * zoom;
+        x: (LinkLayout.dstX(nodes[link.dst]) + offset-x) * 1px * zoom;
+        y: (LinkLayout.dstY(nodes[link.dst], link.dst_slot) + offset-y) * 1px * zoom;
         width: 10px * zoom;
         height: 10px * zoom;
         border-bottom-right-radius: 5px * zoom;

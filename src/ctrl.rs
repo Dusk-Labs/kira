@@ -5,9 +5,9 @@ mod tabs;
 
 use self::command_palette::CommandPalette;
 use self::graph::Graph;
+use self::menu::darwin::DarwinMenu;
 use self::menu::Menu;
 use self::tabs::Tabs;
-use self::menu::darwin::DarwinMenu;
 
 use crate::model::Link;
 use crate::model::LinkType;
@@ -16,9 +16,8 @@ use crate::model::Node;
 use crate::model::NodeType;
 use crate::model::WorkflowPrompt;
 use crate::model::{self};
-use crate::ui::View;
-use crate::ui::Platform;
 use crate::ui::Metadata;
+use crate::ui::View;
 use crate::utils::Aro;
 use crate::utils::Arw;
 
@@ -26,10 +25,10 @@ use slint::ComponentHandle;
 use slint::Weak;
 
 use std::collections::HashMap;
+use std::env;
 use std::fs::File;
 use std::sync::mpsc::Receiver;
 use std::sync::mpsc::Sender;
-use std::env;
 
 #[derive(Debug)]
 pub enum Event {
@@ -51,6 +50,18 @@ pub enum Event {
         input: String,
         ty: String,
         value: String,
+    },
+    SetFieldRandom {
+        node_idx: usize,
+        input: String,
+    },
+    SetFieldInc {
+        node_idx: usize,
+        input: String,
+    },
+    SetFieldDec {
+        node_idx: usize,
+        input: String,
     },
     Render,
     SetNodeOutput {
@@ -257,6 +268,30 @@ impl Mediator {
                         _ => {}
                     }
                 }
+                SetFieldRandom {
+                    node_idx,
+                    ref input,
+                } => {
+                    if self.set_field_random(node_idx, input).is_some() {
+                        notify!(Graph);
+                    }
+                }
+                SetFieldInc {
+                    node_idx,
+                    ref input,
+                } => {
+                    if self.set_field_increment(node_idx, input).is_some() {
+                        notify!(Graph);
+                    }
+                }
+                SetFieldDec {
+                    node_idx,
+                    ref input,
+                } => {
+                    if self.set_field_decrement(node_idx, input).is_some() {
+                        notify!(Graph);
+                    }
+                }
                 Render => {
                     let mut model = self.model.write();
                     let Some(project) = model.tabs_mut().selected_project_mut() else {
@@ -290,13 +325,45 @@ impl Mediator {
                         .unwrap();
                 }
                 TogglePalette => {
-                    self.ui.upgrade_in_event_loop(move |view| {
-                        view.invoke_focus();
-                        view.invoke_toggle_palette();
-                    }).unwrap();
+                    self.ui
+                        .upgrade_in_event_loop(move |view| {
+                            view.invoke_focus();
+                            view.invoke_toggle_palette();
+                        })
+                        .unwrap();
                 }
             }
         }
+    }
+
+    fn set_field_random(&self, node_idx: usize, input: &str) -> Option<()> {
+        let mut model = self.model.write();
+        let project = model.tabs_mut().selected_project_mut()?;
+        let state = project.graph_mut().get_state_mut(node_idx, input)?;
+
+        state.randomize();
+
+        Some(())
+    }
+
+    fn set_field_increment(&self, node_idx: usize, input: &str) -> Option<()> {
+        let mut model = self.model.write();
+        let project = model.tabs_mut().selected_project_mut()?;
+        let state = project.graph_mut().get_state_mut(node_idx, input)?;
+
+        state.increment();
+
+        Some(())
+    }
+
+    fn set_field_decrement(&self, node_idx: usize, input: &str) -> Option<()> {
+        let mut model = self.model.write();
+        let project = model.tabs_mut().selected_project_mut()?;
+        let state = project.graph_mut().get_state_mut(node_idx, input)?;
+
+        state.decrement();
+
+        Some(())
     }
 }
 

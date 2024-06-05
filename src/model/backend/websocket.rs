@@ -15,11 +15,21 @@ pub struct WsClient {
 
 impl WsClient {
     pub fn new(tx: Sender<Event>, base_url: String, client_id: Uuid) -> Self {
+        let base_url = base_url.replace("http", "ws");
+        let base_url = base_url.replace("https", "wss");
+
         Self {
             tx,
             base_url,
             client_id,
         }
+    }
+
+    pub fn base_url_http(&self) -> String {
+        let base_url = self.base_url.replace("ws", "http");
+        let base_url = base_url.replace("wss", "https");
+
+        base_url
     }
 
     pub fn client_id(&self) -> String {
@@ -31,7 +41,7 @@ impl WsClient {
 
     pub async fn listen(self) {
         let url = format!("{}/ws?clientId={}", self.base_url, self.client_id());
-        let config = ClientConfig::new(url.as_str());
+        let config = ClientConfig::new(dbg!(url.as_str()));
 
         let (handle, future) = ezsockets::connect(move |_client| self, config).await;
 
@@ -66,7 +76,8 @@ impl ClientExt for WsClient {
             let first = &output.images[0];
             let output = format!(
                 "{}/view?filename={}&type=temp",
-                self.base_url, first.filename
+                self.base_url_http(),
+                first.filename
             );
 
             self.tx.send(Event::SetNodeOutput { node, output }).unwrap();

@@ -59,10 +59,12 @@ export component View inherits Window {
         VerticalLayout {
             if Metadata.platform != Platform.Darwin : Menu {}
 
+            /*
             Tabs {
                 selected_tab: selected_tab;
                 tab_names: tab_names;
             }
+            */
 
             Graph {
                 visible: any_tab_selected();

@@ -17,7 +17,7 @@ impl Graph {
         Self {
             nodes: vec![],
             links: vec![],
-            zoom: 2.,
+            zoom: 1.0,
             offset: (0., 0.),
         }
     }

@@ -1,26 +1,155 @@
-import { LineEdit, TextEdit, StandardListView } from "std-widgets.slint";
+import { TextEdit } from "std-widgets.slint";
 import { Field, FieldType, NodeLogic } from "state.slint";
+import { LineEdit } from "../core_widgets/lineedit-base.slint";
+import { Dropdown } from "../core_widgets/combobox.slint";
+import "../../assets/AktivGrotesk-Regular.ttf";
 
-component IntInput inherits VerticalLayout {
+component SvgButton inherits VerticalLayout {
+    in property<image> source;
+    in property<color> color;
+    in property<length> icon-height;
+    in property<length> icon-width;
+    in property<length> rect-width : icon-width;
+    in property<length> rect-height : icon-height;
+    in property<color> rect-color: transparent;
+    in property<length> border-radius <=> rect.border-radius;
+
+    property<color> transparent-color : transparent;
+    
+    callback clicked <=> ta.clicked;
+
+    alignment: LayoutAlignment.center;
+
+    function get-rect-color() -> color {
+        if !ta.has-hover {
+            return rect-color;
+        }
+
+        if rect-color == transparent-color {
+            return rect-color.transparentize(-1);
+        }
+
+        return rect-color.brighter(1);
+    }
+
+    rect := Rectangle {
+        width: rect-width;
+        height: rect-height;
+        background: ta.has-hover ? rect-color.brighter(1) : rect-color;
+
+        animate background {
+            duration: 100ms;
+        }
+
+        Image {
+            vertical-alignment: ImageVerticalAlignment.center;
+            source: source;       
+            colorize: ta.has-hover ? color.brighter(1) : color;
+            height: icon-height;
+            width: icon-width;
+            image-fit: fill;
+
+            animate colorize {
+                duration: 100ms;
+            }
+        }
+
+        ta := TouchArea {}
+    }
+}
+
+component InputGroup inherits HorizontalLayout {
+    in property<float> zoom;
+    in property<InputType> input-type;
+    in property<string> default-value;
+    in property<bool> show-randomize;
+    in property<length> input-width;
+
+    callback edited <=> edit.edited;
+
+    callback increment <=> inc.clicked;
+    callback decrement <=> dec.clicked;
+
+    callback randomize();
+
+    spacing: 4px * zoom;
+
+    dec := SvgButton {
+        icon-height: 8px * zoom;
+        icon-width: 8px * zoom;
+        source: @image-url("../../assets/minus.png");
+        color: #E5E5E6;
+    }
+
+    edit := LineEdit {
+        width: root.input-width;
+        height: 24px * zoom;
+        font-size: 10px * zoom;
+        input-type: input-type;
+        text: default-value;
+        horizontal-alignment: TextHorizontalAlignment.center;
+    }
+
+    inc := SvgButton {
+        icon-height: 8px * zoom;
+        icon-width: 8px * zoom;
+        source: @image-url("../../assets/plus.png");
+        color: #E5E5E6;
+    }
+
+    if show-randomize: SvgButton {
+        icon-height: 8px * zoom;
+        icon-width: 8px * zoom;
+        source: @image-url("../../assets/retry.svg");
+        color: #FFF;
+        rect-color: #383A3D;
+        rect-width: 16px * zoom;
+        rect-height: 16px * zoom;
+        border-radius: 4px * zoom;
+        padding-left: 4px * zoom;
+
+        clicked() => {
+            root.randomize();
+        }
+    }
+}
+
+component IntInput inherits Rectangle {
+    in property<float> zoom;
     in property<string> text;
     in property<string> default-value;
     in property<InputType> input-type : InputType.number;
+    in property<length> input-width : 30px * zoom;
+    in property<bool> show-randomize : false;
+    in property<length> padding-right-offset: 0px;
 
-    callback edited(string);
+    callback edited <=> i-group.edited;
+    callback increment <=> i-group.increment;
+    callback decrement <=> i-group.decrement;
+    callback randomize <=> i-group.randomize;
+
+    background: #141415;
+    border-radius: 7px * zoom;
     
-    Text {
-        text: parent.text;
-    }
+    HorizontalLayout {
+        padding-left: 5px * zoom;
+        padding-right: 3px * zoom + padding-right-offset;
 
-    LineEdit {
-        width: 100%;
-        height: 20px;
-        font-size: 14px;
-        input-type: parent.input-type;
-        text: parent.default-value;
+        Text {
+            font-family: "Aktiv Grotesk";
+            font-weight: 400;
+            font-size: 11px * zoom;
+            text: text;
+            vertical-alignment: TextVerticalAlignment.center;
+            color: #E5E5E6;
+        }
 
-        edited(text) => {
-            parent.edited(text);
+        i-group := InputGroup {
+            zoom: zoom;
+            input-type: input-type;
+            default-value: default-value;
+            input-width: input-width;
+            show-randomize: root.show-randomize;
         }
     }
 }
@@ -28,15 +157,40 @@ component IntInput inherits VerticalLayout {
 export component NodeInput inherits HorizontalLayout {
     in property<int> node-idx;
     in property<Field> field-meta;
+    in property<float> zoom;
 
-    if field-meta.ty == FieldType.select: StandardListView {
-        width: 100%;
-        height: 100px;
+    width: 100%;
+
+    function update_field(text: string) {
+        NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+    }
+
+    function randomize_field() {
+        NodeLogic.set_field_random(node_idx, field-meta.name);
+    }
+
+    function increment_field() {
+        NodeLogic.set_field_inc(node_idx, field-meta.name);
+    }
+
+    function decrement_field() {
+        NodeLogic.set_field_dec(node_idx, field-meta.name);
+    }
+
+    function isSeed() -> bool {
+        return field-meta.name == "seed";
+    }
+
+    if field-meta.ty == FieldType.select: Dropdown {
+        height: 24px * zoom;
+        current-value: field-meta.name;
+        zoom: zoom;
         model: field-meta.options;
-        current-item: field-meta.default_option;
+        current-index: field-meta.default-option;
+        enabled: true;
 
-        current-item-changed(idx) => {
-            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, self.model[idx].text);
+        selected(text) => {
+            root.update_field(text);
         }
     }
 
@@ -48,26 +202,62 @@ export component NodeInput inherits HorizontalLayout {
         text: field-meta.default_text;
 
         edited(text) => {
-            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+            root.update_field(text);
         }
     }
 
     if field-meta.ty == FieldType.int-input: IntInput {
+        zoom: zoom;
         text: field-meta.name;
         default-value: field-meta.default_value;
+        padding-right-offset: 3px * zoom;
+
+        states [
+            is-seed when root.isSeed() :{
+                input-width: 50px * zoom;
+                show-randomize: true;
+                padding-right-offset: 0px;
+            }
+        ]
 
         edited(text) => {
-            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+            root.update_field(text);
+        }
+
+        randomize() => {
+            root.randomize_field();
+        }
+
+        increment() => {
+            root.increment_field();
+        }
+
+        decrement() => {
+            root.decrement_field();
         }
     }
 
     if field-meta.ty == FieldType.float-input: IntInput {
+        zoom: zoom;
         text: field-meta.name;
         default-value: field-meta.default-value;
         input-type: InputType.decimal;
+        padding-right-offset: 3px * zoom;
 
         edited(text) => {
-            NodeLogic.set_field(node_idx, field-meta.name, field-meta.ty, text);
+            root.update_field(text);
+        }
+
+        randomize() => {
+            root.randomize_field();
+        }
+
+        increment() => {
+            root.increment_field();
+        }
+
+        decrement() => {
+            root.decrement_field();
         }
     }
 

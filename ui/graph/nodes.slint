@@ -1,8 +1,120 @@
 import { StandardListView, TextEdit, LineEdit } from "std-widgets.slint";
+import "../../assets/AktivGrotesk-Regular.ttf";
 
-import { LinkData, NodeData, FloatingLinkData, FloatingState, FieldType, NodeLogic } from "state.slint";
+import { LinkData, NodeData, FloatingLinkData, FloatingState, FieldType, NodeLogic, Slot } from "state.slint";
 import { LinkLayout, LinkLogic } from "links.slint";
 import { NodeInput } from "inputs.slint";
+
+component NodeHeader inherits HorizontalLayout {
+    in property<string> text;
+    in property<float> zoom;
+
+    alignment: LayoutAlignment.space-between;
+    padding-left: 12px * zoom;
+    padding-right: 12px * zoom;
+    padding-bottom: 20px * zoom;
+    padding-top: 4px * zoom;
+
+    Rectangle {
+        Text {
+            color: #fff;
+            text: text;
+            wrap: TextWrap.word-wrap;
+            font-size: 14px * zoom;
+            font-family: "Aktiv Grotesk";
+            font-weight: 500;
+        }
+    }
+
+    Rectangle {
+        width: 14px * zoom;
+        height: 14px * zoom;
+
+        Image {
+            source: @image-url("../../assets/three-dots.svg");
+            colorize: #d9d9d9;
+            width <=> parent.width;
+            height <=> parent.height;
+        }
+
+        TouchArea {
+            mouse-cursor: MouseCursor.pointer;
+        }
+    }
+}
+
+component ConnectionEdge inherits HorizontalLayout {
+    in property<float> zoom;
+    in property<int> input-idx;
+    in property<Slot> input;
+    in property<FloatingLinkData> floating;
+    in property<int> node-idx;
+    in property<bool> left;
+
+    spacing: 5px * zoom;
+    padding-left: 12px * zoom;
+    padding-right: 12px * zoom;
+
+    function click-input() {
+        if floating.floating_state == FloatingState.none {
+            LinkLogic.new_link_from_input(node_idx, input_idx);
+        } else {
+            LinkLogic.attach_link_to_input(node_idx, input_idx);
+        }
+    }
+
+    function click-output() {
+        if floating.floating_state == FloatingState.none {
+            LinkLogic.new_link_from_output(node_idx, input_idx);
+        } else {
+            LinkLogic.attach_link_to_output(node_idx, input_idx);
+        }
+    }
+
+    if !left : Text {
+        color: white;
+        font-size: 11px * zoom;
+        text: input.name;
+        horizontal-alignment: TextHorizontalAlignment.right;
+        vertical-alignment: TextVerticalAlignment.center;
+        font-family: "Aktiv Grotesk";
+        font-weight: 400;
+    }
+    
+
+    Rectangle {
+        clip: true;
+
+        input_ta := TouchArea {
+            clicked => {
+                if left {
+                    click-input();
+                } else {
+                    click-output();
+                }
+            }
+        }
+
+        VerticalLayout{
+            alignment: LayoutAlignment.center;
+            Image {
+                source: left ? @image-url("../../assets/left-chevron.svg") : @image-url("../../assets/right-chevron.svg");
+                colorize: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty).brighter(1) : LinkLayout.colorFromstring(input.ty);
+                width: 11px * zoom;
+                height: 8px * zoom;
+            }
+        }
+    }
+    
+    if left : Text {
+        color: white;
+        font-size: 11px * zoom;
+        text: input.name;
+        horizontal-alignment: TextHorizontalAlignment.left;
+        font-family: "Aktiv Grotesk";
+        font-weight: 400;
+    }
+}
 
 export component Node inherits Rectangle {
     in-out property <NodeData> n;
@@ -15,10 +127,13 @@ export component Node inherits Rectangle {
 
     x: (n.x + offset-x*1px) * zoom;
     y: (n.y - 10px + offset-y*1px) * zoom;
-    background: #0f0f0f;
+    background: #27282a;
     width: n.width * zoom;
     height: l.preferred-height;
-    border-radius: 3px * zoom;
+    border-radius: 14px * zoom;
+    border-color: #313235;
+    border-width: 1px * zoom;
+    clip: true;
 
     TouchArea {
         moved => {
@@ -47,66 +162,36 @@ export component Node inherits Rectangle {
     l := VerticalLayout {
         padding-top: 10px * zoom;
         padding-bottom: 5px * zoom;
+
+        NodeHeader {
+            zoom: zoom;
+            text: n.text;
+        }
+
         HorizontalLayout {
+            padding-bottom: 8px * zoom;
+
             VerticalLayout {
                 spacing: 5px * zoom;
-                for input[input_idx] in n.inputs: HorizontalLayout {
-                    spacing: 2px * zoom;
-                    Rectangle {
-                        // x: n.x - 10px;
-                        width: 10px * zoom;
-                        height: 10px * zoom;
-                        border-bottom-right-radius: 5px * zoom;
-                        border-top-right-radius: 5px * zoom;
-                        background: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty) : LinkLayout.colorFromstring(input.ty).darker(1);
-
-                        input_ta := TouchArea {
-                            clicked => {
-                                if floating.floating_state == FloatingState.none {
-                                    LinkLogic.new_link_from_input(node_idx, input_idx);
-                                } else {
-                                    LinkLogic.attach_link_to_input(node_idx, input_idx);
-                                }
-                            }
-                        }
-                    }
-                    Text {
-                        color: white;
-                        height: 10px * zoom;
-                        text: input.name;
-                        horizontal-alignment: TextHorizontalAlignment.left;
-                        font-size: 6pt * zoom;
-                    }
+                for input[input_idx] in n.inputs: ConnectionEdge {
+                    zoom: zoom;
+                    input_idx: input_idx;
+                    input: input;
+                    floating: floating;
+                    node_idx: node_idx;
+                    left: true;
                 }
             }
             VerticalLayout {
                 spacing: 5px * zoom;
-                for output[output_idx] in n.outputs: HorizontalLayout {
-                    spacing: 2px * zoom;
-                    Text {
-                        color: white;
-                        height: 10px * zoom;
-                        text: output.name;
-                        horizontal-alignment: TextHorizontalAlignment.right;
-                        font-size: 6pt * zoom;
-                    }
-                    Rectangle {
-                        // x: n.x + n.width;
-                        width: 10px * zoom;
-                        height: 10px * zoom;
-                        border-bottom-left-radius: 5px * zoom;
-                        border-top-left-radius: 5px * zoom;
-                        background: output_ta.has-hover ? LinkLayout.colorFromstring(output.ty) : LinkLayout.colorFromstring(output.ty).darker(1);
-                        output_ta := TouchArea {
-                            clicked => {
-                                if floating.floating_state == FloatingState.none {
-                                    LinkLogic.new_link_from_output(node_idx, output_idx);
-                                } else {
-                                    LinkLogic.attach_link_to_output(node_idx, output_idx);
-                                }
-                            }
-                        }
-                    }
+                alignment: LayoutAlignment.start;
+                for output[output_idx] in n.outputs: ConnectionEdge {
+                    zoom: zoom;
+                    input_idx: output_idx;
+                    input: output;
+                    floating: floating;
+                    node_idx: node_idx;
+                    left: false;
                 }
             }
         }
@@ -114,16 +199,10 @@ export component Node inherits Rectangle {
         for input[input_idx] in n.input_fields: NodeInput {
             node_idx: node_idx;
             field_meta: input;
-        }
-
-        Rectangle {
-            Text {
-                color: white;
-                text: n.text;
-                wrap: TextWrap.word-wrap;
-                font-size: 14pt * zoom;
-            }
-            padding: 15px * zoom;
+            zoom: zoom;
+            padding-left: 12px * zoom;
+            padding-right: 12px * zoom;
+            padding-top: 4px * zoom;
         }
     }
 }

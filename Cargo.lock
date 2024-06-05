@@ -12,6 +12,7 @@ dependencies = [
  "indexmap",
  "muda",
  "native-dialog",
+ "rand",
  "reqwest",
  "serde",
  "serde_json",
@@ -2363,7 +2364,7 @@ dependencies = [
  "gbm",
  "gbm-sys",
  "glutin",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core",
  "i-slint-renderer-femtovg",
  "input",
@@ -2380,7 +2381,7 @@ dependencies = [
  "cfg-if",
  "i-slint-backend-linuxkms",
  "i-slint-backend-winit",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core",
 ]
 
@@ -2400,7 +2401,7 @@ dependencies = [
  "derive_more",
  "glutin",
  "glutin-winit",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core",
  "i-slint-core-macros",
  "i-slint-renderer-femtovg",
@@ -2422,18 +2423,6 @@ dependencies = [
 [[package]]
 name = "i-slint-common"
 version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "98770ce4f006a76efa0c728857a29fdca2dcad5dc0442f0aa786a28bbf9dcab1"
-dependencies = [
- "cfg-if",
- "derive_more",
- "fontdb",
- "libloading 0.8.3",
-]
-
-[[package]]
-name = "i-slint-common"
-version = "1.6.0"
 source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "cfg-if",
@@ -2445,8 +2434,7 @@ dependencies = [
 [[package]]
 name = "i-slint-compiler"
 version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0f2f6ebf56a7c2845868e01e111558b0e2e8164a3514a7fd54ab3edc2b6c3a83"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
  "by_address",
  "codemap",
@@ -2454,7 +2442,7 @@ dependencies = [
  "css-color-parser2",
  "derive_more",
  "fontdue",
- "i-slint-common 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "i-slint-common",
  "image 0.24.9",
  "itertools 0.12.1",
  "linked_hash_set",
@@ -2465,32 +2453,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "resvg",
- "rowan",
- "smol_str",
- "strum",
- "thiserror",
- "url",
-]
-
-[[package]]
-name = "i-slint-compiler"
-version = "1.6.0"
-source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
-dependencies = [
- "by_address",
- "codemap",
- "codemap-diagnostic",
- "css-color-parser2",
- "derive_more",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
- "itertools 0.12.1",
- "linked_hash_set",
- "lyon_extra",
- "lyon_path",
- "num_enum",
- "once_cell",
- "proc-macro2",
- "quote",
  "rowan",
  "smol_str",
  "strum",
@@ -2512,7 +2474,7 @@ dependencies = [
  "derive_more",
  "euclid",
  "fontdue",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core-macros",
  "image 0.24.9",
  "integer-sqrt",
@@ -2565,7 +2527,7 @@ dependencies = [
  "dwrote",
  "femtovg",
  "glow",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core",
  "i-slint-core-macros",
  "imgref",
@@ -2599,7 +2561,7 @@ dependencies = [
  "foreign-types 0.5.0",
  "glow",
  "glutin",
- "i-slint-common 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-common",
  "i-slint-core",
  "i-slint-core-macros",
  "lyon_path",
@@ -4586,10 +4548,9 @@ dependencies = [
 [[package]]
 name = "slint-build"
 version = "1.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41a2c87c4f1fb80f6a0af909e702ed3d782a1e388de04738be041c8f1dc5dfd5"
+source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
- "i-slint-compiler 1.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "i-slint-compiler",
  "spin_on",
  "thiserror",
  "toml_edit 0.22.13",
@@ -4600,7 +4561,7 @@ name = "slint-macros"
 version = "1.6.0"
 source = "git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar#8aa8e8f89df3b2b662f12938fe353f378400e344"
 dependencies = [
- "i-slint-compiler 1.6.0 (git+https://github.com/vgarleanu/slint?branch=fix/macos-menu-bar)",
+ "i-slint-compiler",
  "proc-macro2",
  "quote",
  "spin_on",

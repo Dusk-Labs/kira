@@ -9,6 +9,9 @@ export global FieldType {
 export global NodeLogic {
     callback move_node(int, length, length);
     callback set_field(int, string, string, string);
+    callback set_field_random(int, string);
+    callback set_field_inc(int, string);
+    callback set_field_dec(int, string);
     callback focus_callback();
 }
 
@@ -20,13 +23,10 @@ export struct Slot {
 export struct Field {
     name: string,
     ty: string,
-    options: [StandardListViewItem],
+    options: [string],
     default_text: string,
     default_value: float,
     default_option: int,
-    min: float,
-    max: float,
-    step: float,
     image: image,
 }
 

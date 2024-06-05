@@ -148,9 +148,9 @@ impl<'de> PromptInputValue {
 impl From<NodeField> for PromptInputValue {
     fn from(field: NodeField) -> PromptInputValue {
         match field {
-            NodeField::IntInput(value) => Self::Integer(value.state as _),
-            NodeField::FloatInput(value) => Self::Float(value.state as _),
-            NodeField::StringInput(value) => Self::Text(value.state),
+            NodeField::IntInput(value) => Self::Integer(value.state() as _),
+            NodeField::FloatInput(value) => Self::Float(value.state() as _),
+            NodeField::StringInput(value) => Self::Text(value.state()),
             NodeField::Select { state, options } => {
                 let state = state
                     .and_then(|idx| options.get(idx).cloned())

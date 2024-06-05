@@ -4,13 +4,13 @@ use crate::ui::View;
 use crate::utils::Aro;
 use crate::Model;
 
+use muda::AboutMetadata;
+use muda::AboutMetadataBuilder;
 use muda::Menu;
 use muda::MenuItemBuilder;
-use muda::SubmenuBuilder;
-use muda::AboutMetadataBuilder;
-use muda::AboutMetadata;
-use muda::Submenu;
 use muda::PredefinedMenuItem;
+use muda::Submenu;
+use muda::SubmenuBuilder;
 
 use std::sync::mpsc::Sender;
 
@@ -83,22 +83,20 @@ impl Controller for DarwinMenu {
 
         menu_bar.append_items(&[&app, &file]).unwrap();
         menu_bar.init_for_nsapp();
-        
+
         // NOTE: Very important, otherwise the whole app will crash when anything in the menu bar
         // gets clicked.
         core::mem::forget(menu_bar);
         core::mem::forget(app);
         core::mem::forget(file);
 
-        let handle_event = move |event: muda::MenuEvent| {
-            match event.id.0.as_str() {
-                "render" => tx.send(Event::Render).unwrap(),
-                "command-palette" => tx.send(Event::TogglePalette).unwrap(),
-                "open-file" => tx.send(Event::OpenFile).unwrap(),
-                "save" => tx.send(Event::Save).unwrap(),
-                "save-as" => tx.send(Event::SaveAs).unwrap(),
-                unk => println!("Unknown menu-bar event: {}", unk),
-            }
+        let handle_event = move |event: muda::MenuEvent| match event.id.0.as_str() {
+            "render" => tx.send(Event::Render).unwrap(),
+            "command-palette" => tx.send(Event::TogglePalette).unwrap(),
+            "open-file" => tx.send(Event::OpenFile).unwrap(),
+            "save" => tx.send(Event::Save).unwrap(),
+            "save-as" => tx.send(Event::SaveAs).unwrap(),
+            unk => println!("Unknown menu-bar event: {}", unk),
         };
 
         muda::MenuEvent::set_event_handler(Some(handle_event));
@@ -117,9 +115,14 @@ fn about() -> AboutMetadata {
             let height = icon.height();
 
             muda::Icon::from_rgba(icon.into_raw(), width, height).ok()
-        }).next();
+        })
+        .next();
 
-    let version = format!("{} ({})", env!("CARGO_PKG_VERSION"), env!("GIT_COMMIT_HASH"));
+    let version = format!(
+        "{} ({})",
+        env!("CARGO_PKG_VERSION"),
+        env!("GIT_COMMIT_HASH")
+    );
 
     AboutMetadataBuilder::new()
         .icon(icon)
