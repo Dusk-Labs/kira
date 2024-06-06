@@ -2,6 +2,7 @@ import { Field, FieldType, NodeLogic } from "state.slint";
 import { LineEdit } from "../core_widgets/lineedit-base.slint";
 import { Dropdown } from "../core_widgets/combobox.slint";
 import { TextEdit } from "../core_widgets/textedit-base.slint";
+import { KiraColors, KiraIcons } from "../theme.slint";
 import "../../assets/AktivGrotesk-Regular.ttf";
 
 component SvgButton inherits VerticalLayout {
@@ -77,8 +78,8 @@ component InputGroup inherits HorizontalLayout {
     dec := SvgButton {
         icon-height: 8px * zoom;
         icon-width: 8px * zoom;
-        source: @image-url("../../assets/minus.png");
-        color: #E5E5E6;
+        source: KiraIcons.Minus;
+        color: KiraColors.Quaternary;
     }
 
     edit := LineEdit {
@@ -93,16 +94,16 @@ component InputGroup inherits HorizontalLayout {
     inc := SvgButton {
         icon-height: 8px * zoom;
         icon-width: 8px * zoom;
-        source: @image-url("../../assets/plus.png");
-        color: #E5E5E6;
+        source: KiraIcons.Plus;
+        color: KiraColors.Quaternary;
     }
 
     if show-randomize: SvgButton {
         icon-height: 8px * zoom;
         icon-width: 8px * zoom;
-        source: @image-url("../../assets/retry.svg");
-        color: #FFF;
-        rect-color: #383A3D;
+        source: KiraIcons.Retry;
+        color: KiraColors.Secondary;
+        rect-color: KiraColors.Randomize-Background;
         rect-width: 16px * zoom;
         rect-height: 16px * zoom;
         border-radius: 4px * zoom;
@@ -128,7 +129,7 @@ component IntInput inherits Rectangle {
     callback decrement <=> i-group.decrement;
     callback randomize <=> i-group.randomize;
 
-    background: #141415;
+    background: KiraColors.MediumBackground;
     border-radius: 7px * zoom;
     
     HorizontalLayout {
@@ -141,7 +142,7 @@ component IntInput inherits Rectangle {
             font-size: 11px * zoom;
             text: text;
             vertical-alignment: TextVerticalAlignment.center;
-            color: #E5E5E6;
+            color: KiraColors.Quaternary;
         }
 
         i-group := InputGroup {
@@ -160,7 +161,7 @@ component TextInput inherits Rectangle {
     in property<string> label;
     callback edited <=> edit.edited;
 
-    background: #141415;
+    background: KiraColors.MediumBackground;
     border-radius: 7px * zoom;
     clip: true;
 

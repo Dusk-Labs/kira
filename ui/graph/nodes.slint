@@ -4,6 +4,7 @@ import "../../assets/AktivGrotesk-Regular.ttf";
 import { LinkData, NodeData, FloatingLinkData, FloatingState, FieldType, NodeLogic, Slot } from "state.slint";
 import { LinkLayout, LinkLogic } from "links.slint";
 import { NodeInput } from "inputs.slint";
+import { KiraColors, KiraIcons } from "../theme.slint";
 
 component NodeHeader inherits HorizontalLayout {
     in property<string> text;
@@ -17,7 +18,7 @@ component NodeHeader inherits HorizontalLayout {
 
     Rectangle {
         Text {
-            color: #fff;
+            color: KiraColors.Secondary;
             text: text;
             wrap: TextWrap.word-wrap;
             font-size: 14px * zoom;
@@ -31,8 +32,8 @@ component NodeHeader inherits HorizontalLayout {
         height: 14px * zoom;
 
         Image {
-            source: @image-url("../../assets/three-dots.svg");
-            colorize: #d9d9d9;
+            source: KiraIcons.Three-Dots;
+            colorize: KiraColors.Quaternary;
             width <=> parent.width;
             height <=> parent.height;
         }
@@ -72,7 +73,7 @@ component ConnectionEdge inherits HorizontalLayout {
     }
 
     if !left : Text {
-        color: white;
+        color: KiraColors.Secondary;
         font-size: 11px * zoom;
         text: input.name;
         horizontal-alignment: TextHorizontalAlignment.right;
@@ -98,8 +99,8 @@ component ConnectionEdge inherits HorizontalLayout {
         VerticalLayout {
             alignment: LayoutAlignment.center;
             Image {
-                source: left ? @image-url("../../assets/left-chevron.svg") : @image-url("../../assets/right-chevron.svg");
-                colorize: input_ta.has-hover ? LinkLayout.colorFromstring(input.ty).brighter(1) : LinkLayout.colorFromstring(input.ty);
+                source: left ? KiraIcons.Left-Chevron : KiraIcons.Right-Chevron;
+                colorize: input_ta.has-hover ? KiraColors.Primary.brighter(0.4) : KiraColors.Primary;
                 width: 11px * zoom;
                 height: 8px * zoom;
             }
@@ -127,11 +128,11 @@ export component Node inherits Rectangle {
 
     x: (n.x + offset-x*1px) * zoom;
     y: (n.y - 10px + offset-y*1px) * zoom;
-    background: #27282a;
+    background: KiraColors.LightBackground;
     width: n.width * zoom;
     height: l.preferred-height;
     border-radius: 14px * zoom;
-    border-color: #313235;
+    border-color: KiraColors.Node-Border;
     border-width: 1px * zoom;
     clip: true;
 

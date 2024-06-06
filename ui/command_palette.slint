@@ -159,10 +159,15 @@ export component Palette inherits Rectangle {
     Rectangle {
         width: parent.width - 3cm;
         height: parent.height - 3cm;
-        border-color: #262625;
-        border-width: 2px;
+        border-color: #2E283E;
+        border-width: 1px;
         border-radius: 20px;
-        background: #1e1e1e;
+        background: #433A5A99;
+
+        drop-shadow-blur: 16px;
+        drop-shadow-color: #000.transparentize(0.05);
+        drop-shadow-offset-x: 0px;
+        drop-shadow-offset-y: 2px;
 
         padding: 10px;
 

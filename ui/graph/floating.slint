@@ -1,5 +1,6 @@
 import { FloatingState, FloatingLinkData, NodeData } from "state.slint";
 import { LinkLayout } from "links.slint";
+import { KiraColors, KiraIcons } from "../theme.slint";
 
 export component MoveArea inherits TouchArea {
     in-out property <FloatingLinkData> floating;
@@ -31,7 +32,7 @@ export component Floating inherits Rectangle {
     in property <float> offset-y;
 
     Path {
-        stroke: LinkLayout.colorFromstring(floating.ty);
+        stroke: KiraColors.linkAccent(floating.ty);
         viewbox-height: viewbox-height;
         viewbox-width: viewbox-width;
         stroke-width: 3px;
@@ -74,9 +75,9 @@ export component FloatingSlots inherits Rectangle {
 
     function image() -> image {
         if is-right-facing() {
-            return @image-url("../../assets/right-chevron.svg");
+            return KiraIcons.Right-Chevron;
         } else {
-            return @image-url("../../assets/left-chevron.svg");
+            return KiraIcons.Left-Chevron;
         }
     }
 
@@ -97,7 +98,7 @@ export component FloatingSlots inherits Rectangle {
 
             Image {
                 source: root.image();
-                colorize: LinkLayout.colorFromstring(floating.ty);
+                colorize: KiraColors.linkAccent(floating.ty);
                 width: 11px * zoom;
                 height: 8px * zoom;
             }

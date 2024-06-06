@@ -1,4 +1,5 @@
 import { NodeData, LinkData } from "state.slint";
+import { KiraIcons, KiraColors } from "../theme.slint";
 
 export global LinkLogic {
     callback new_link_from_output(int, int);
@@ -9,16 +10,6 @@ export global LinkLogic {
 
 
 export global LinkLayout {
-    pure public function colorFromstring(ty: string) -> color {
-        if ty == "TXT" {
-            #FA80C9
-        } else if ty == "IMG"{
-            #47FFDE
-        } else {
-            #A676F5
-        }
-    }
-
     pure public function srcX(src: NodeData) -> float {
         return (src.x + src.width - 23px) / 1px;
     }
@@ -46,7 +37,7 @@ export component Link inherits Rectangle {
     in property <float> offset-y;
 
     Path {
-        stroke: LinkLayout.colorFromstring(link.ty);
+        stroke: KiraColors.linkAccent(link.ty);
         viewbox-height: viewbox-height;
         viewbox-width: viewbox-width;
         stroke-width: 3px;
@@ -86,8 +77,8 @@ export component LinkSlots inherits Rectangle {
             alignment: LayoutAlignment.center;
 
             Image {
-                source: @image-url("../../assets/right-chevron.svg");
-                colorize: LinkLayout.colorFromstring(link.ty).brighter(0.3);
+                source: KiraIcons.Right-Chevron;
+                colorize: KiraColors.Primary.brighter(0.3);
                 width: 11px * zoom;
                 height: 8px * zoom;
             }
@@ -105,8 +96,8 @@ export component LinkSlots inherits Rectangle {
             alignment: LayoutAlignment.center;
 
             Image {
-                source: @image-url("../../assets/left-chevron.svg");
-                colorize: LinkLayout.colorFromstring(link.ty).brighter(0.3);
+                source: KiraIcons.Left-Chevron;
+                colorize: KiraColors.Primary.brighter(0.3);
                 width: 11px * zoom;
                 height: 8px * zoom;
             }

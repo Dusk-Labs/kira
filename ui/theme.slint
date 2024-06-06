@@ -1,0 +1,40 @@
+export global KiraColors {
+    in-out property <color> Primary : #a676f5;
+    in-out property <color> Secondary : #ffffff;
+    in-out property <color> Tertiary : #9b9b9b;
+    in-out property <color> Quaternary : #e5e5e6;
+    in-out property <color> Quinary : #d9d9d9;
+
+    in-out property <color> DarkBackground : #101010;
+    in-out property <color> MediumBackground : #141415;
+    in-out property <color> LightBackground : #27282a;
+
+    in-out property <color> Accent-Image : #47ffde;
+    in-out property <color> Accent-Text : #fa80c9;
+
+    in-out property <color> Node-Border : #313235;
+    in-out property <color> Randomize-Background : #383a3d;
+
+    pure public function linkAccent(ty: string) -> color {
+        debug(ty);
+
+        if ty == "TXT" {
+            Accent-Text
+        } else if ty == "IMG" {
+            Accent-Image
+        } else {
+            Primary
+        }
+    }
+}
+
+export global KiraIcons {
+    in-out property <image> Left-Chevron : @image-url("../assets/left-chevron.svg");
+    in-out property <image> Right-Chevron : @image-url("../assets/right-chevron.svg");
+    in-out property <image> Down-Chevron : @image-url("../assets/down-chevron.png");
+    in-out property <image> Three-Dots : @image-url("../assets/three-dots.svg");
+
+    in-out property <image> Minus : @image-url("../assets/minus.png");
+    in-out property <image> Plus : @image-url("../assets/plus.png");
+    in-out property <image> Retry : @image-url("../assets/retry.svg");
+}

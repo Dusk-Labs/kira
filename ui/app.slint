@@ -3,6 +3,7 @@ import { SearchItem, Palette, PaletteSearch } from "command_palette.slint";
 import { Timeline } from "timeline.slint";
 import { Tabs, TabLogic } from "tabs.slint";
 import { Menu, MenuLogic } from "menu.slint";
+import { KiraColors } from "theme.slint";
 
 export {
     PointerEventKind,
@@ -42,7 +43,7 @@ export component View inherits Window {
     preferred-width: 30cm;
 
     title: "Kira Studio";
-    background: #0F0F0F;
+    background: KiraColors.DarkBackground;
     forward-focus: focus;
 
     init() => {
