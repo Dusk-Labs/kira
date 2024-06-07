@@ -16,6 +16,17 @@ export {
     FieldType
 }
 
+export enum Platform {
+    Darwin,
+    Linux,
+    Windows,
+    Other,
+}
+
+export global Metadata {
+    in-out property<Platform> platform;
+}
+
 export component View inherits Window {
     in property <[NodeData]> nodes;
     in property <[LinkData]> links;
@@ -46,7 +57,7 @@ export component View inherits Window {
         enabled: true;
 
         VerticalLayout {
-            Menu {}
+            if Metadata.platform != Platform.Darwin : Menu {}
 
             Tabs {
                 selected_tab: selected_tab;
@@ -95,5 +106,9 @@ export component View inherits Window {
 
             return EventResult.reject;
         }
+    }
+
+    public function toggle_palette() {
+        palette.toggle();
     }
 }
